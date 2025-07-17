@@ -1,7 +1,7 @@
 package utils_test
 
 import (
-	"go_project_template/internal/utils"
+	"noize_metter/internal/utils"
 	"testing"
 
 	"github.com/google/uuid"

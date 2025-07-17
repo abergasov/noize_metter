@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"golang.org/x/exp/constraints"
 	"sort"
+
+	"golang.org/x/exp/constraints"
 )
 
 // ContainsInSlice checks if slice contains value

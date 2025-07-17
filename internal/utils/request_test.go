@@ -3,9 +3,9 @@ package utils_test
 import (
 	"context"
 	"fmt"
-	testhelpers "go_project_template/internal/test_helpers"
-	"go_project_template/internal/utils"
 	"net/http"
+	testhelpers "noize_metter/internal/test_helpers"
+	"noize_metter/internal/utils"
 	"testing"
 	"time"
 

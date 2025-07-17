@@ -1,21 +1,12 @@
-PROJECT_NAME:=sampler
+PROJECT_NAME:=noize_metter
 FILE_HASH := $(shell git rev-parse HEAD)
 GOLANGCI_LINT := $(shell command -v golangci-lint 2> /dev/null)
+CURRENT_USER := $(shell whoami)
 
 # test coverage threshold
 COVERAGE_THRESHOLD:=30
 COVERAGE_TOTAL := $(shell go tool cover -func=cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+')
 COVERAGE_PASS_THRESHOLD := $(shell echo "$(COVERAGE_TOTAL) $(COVERAGE_THRESHOLD)" | awk '{print ($$1 >= $$2)}')
-
-init_repo: ## create necessary configs
-	cp configs/sample.common.env configs/common.env
-	cp configs/sample.app_conf.yml configs/app_conf.yml
-	cp configs/sample.app_conf_docker.yml configs/app_conf_docker.yml
-	find . -type f -name "*.go" -exec sed -i 's/go_project_template/${PROJECT_NAME}/g' {} +
-	find . -type f -name "*.mod" -exec sed -i 's/go_project_template/${PROJECT_NAME}/g' {} +
-	go mod tidy && go mod download
-	go install golang.org/x/tools/cmd/goimports@latest
-	goimports -local github.com/$(PROJECT_NAME) -w .
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -25,12 +16,6 @@ ifndef GOLANGCI_LINT
 	${info golangci-lint not found, installing golangci-lint@latest}
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 endif
-
-abi: ## generate abi struct
-	abigen --abi internal/service/web3/approver/erc20.abi.json --pkg approver --type Erc20 --out erc_20.go
-	mv erc_20.go internal/service/web3/approver/
-	abigen --abi internal/service/web3/swapper/stargate.abi.json --pkg swapper --type StargateRouter --out stargate_abi.go
-	mv stargate_abi.go internal/service/web3/swapper/
 
 gogen: ## generate code
 	${info generate code...}
@@ -57,36 +42,16 @@ lint: install-lint ## Runs linters
 lint_d:
 	docker run --rm -v ${PWD}:/app -w /app golangci/golangci-lint:v1.50 golangci-lint run --timeout 5m ./...
 
-stop: ## Stops the local environment
-	${info Stopping containers...}
-	docker compose down
-
-prepare_ci: ## Prepares local environment for ci
-	@echo "-- copying configs"
-	cp configs/sample.common.env configs/common.env
-
-dev_up_ci: prepare_ci stop ## Runs local environment for ci
-	@echo "-- setting up docker-compose"
-	GIT_HASH=${FILE_HASH} docker compose -p ${PROJECT_NAME} up --build dbPostgres -d
-
-dev_up: stop ## Runs local environment
-	${info Running docker-compose up...}
-	GIT_HASH=${FILE_HASH} docker compose -p ${PROJECT_NAME} up --build dbPostgres
-
 build: ## Builds binary
 	@echo "-- building binary"
-	go build -o ./bin/binary ./cmd
+	go build -ldflags="-X 'main.confFile=$(CURDIR)/configs/app_conf.yml'" -o ./bin/binary ./cmd
 
-build_in_docker: ## Builds binary in docker
-	@echo "-- building docker image"
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./bin/binary ./cmd
-
-run: ## Runs binary local with environment in docker
-	${info Run app containered}
-	GIT_HASH=${FILE_HASH} docker compose -p ${PROJECT_NAME} up --build -d
-
-migrate_new: ## Create new migration
-	migrate create -ext sql -dir migrations -seq data
+patch_sudoers: ## Patch sudoers file
+	@echo "-- patching sudoers"
+	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/systemctl start maratonchecker.service" >> /etc/sudoers
+	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/systemctl stop maratonchecker.service" >> /etc/sudoers
+	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/systemctl restart maratonchecker.service" >> /etc/sudoers
+	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/journalctl -u maratonchecker.service -f" >> /etc/sudoers
 
 coverage: ## Check test coverage is enough
 	@echo "Threshold:                ${COVERAGE_THRESHOLD}%"
@@ -96,5 +61,26 @@ coverage: ## Check test coverage is enough
 		exit 1; \
 	fi
 
-.PHONY: help install-lint test gogen prepare_ci lint stop dev_up dev_up_ci build run init_repo migrate_new vulcheck coverage build_in_docker
+deploy: ## Deploy systemd service
+	git pull origin master
+	go mod download
+	make build
+	sudo systemctl stop noizemetter.service
+	sudo systemctl start noizemetter.service
+
+logs: ## Show logs of service
+	sudo journalctl -u noizemetter.service -f | awk -F']: ' '{print $$2}'
+
+install_service: patch_sudoers ## Install service
+	git config --global --add safe.directory $(CURDIR)
+	@echo "-- creating service"
+	sudo mkdir -p /etc/systemd/system
+	cp noizemetter.service noizemetter.service.local
+	@sed -i 's|ExecStart=/path_to_binary|ExecStart=$(shell pwd)/bin/binary|' noizemetter.service.local
+	@sed -i 's|^User=.*|User=$(shell whoami)|' noizemetter.service.local
+	sudo cp noizemetter.service.local /etc/systemd/system/noizemetter.service
+	@echo "-- enable service"
+	sudo service noizemetter start && sudo systemctl enable noizemetter
+
+.PHONY: help install-lint test gogen lint build run vulcheck coverage patch_sudoers deploy logs install_service
 .DEFAULT_GOAL := help

@@ -2,8 +2,8 @@ package sampler
 
 import (
 	"context"
-	"go_project_template/internal/logger"
-	"go_project_template/internal/repository"
+	"noize_metter/internal/logger"
+	"noize_metter/internal/repository"
 )
 
 type Service struct {

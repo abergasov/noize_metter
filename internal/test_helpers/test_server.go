@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"go_project_template/internal/logger"
-	"go_project_template/internal/routes"
 	"net/http"
+	"noize_metter/internal/logger"
+	"noize_metter/internal/routes"
 	"testing"
 
 	"github.com/stretchr/testify/require"

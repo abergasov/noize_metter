@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"go_project_template/internal/logger"
-	"go_project_template/internal/service/sampler"
+	"noize_metter/internal/logger"
+	"noize_metter/internal/service/sampler"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
