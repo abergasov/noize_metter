@@ -4,15 +4,41 @@ import (
 	"compress/gzip"
 	"crypto/tls"
 	"fmt"
-	cloudflarebp "github.com/DaRealFreak/cloudflare-bp-go"
 	"io"
 	"log"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strings"
+	"time"
 )
 
+var (
+	reSession = regexp.MustCompile(`const _webSession\s*=\s*'([^']+)'`)
+)
+
+func (s *Service) bgSetSession() {
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-s.ctx.Done():
+			return
+		case <-ticker.C:
+			if err := s.Auth(); err != nil {
+				s.log.Error("failed to set session: %v", err)
+			}
+		}
+	}
+}
+
 func (s *Service) Auth() error {
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 	form := url.Values{}
 	form.Set("p1", s.conf.RemotePass)
 	form.Set("cmd", "login")
@@ -33,26 +59,18 @@ func (s *Service) Auth() error {
 	req.Header.Set("Accept-Language", "en-US,en;q=0.9,ru;q=0.8")
 	req.Header.Set("Cache-Control", "max-age=0")
 	req.Header.Set("Connection", "keep-alive")
-	req.Header.Set("Content-Length", "152")
-	req.Header.Set("Cookie", "A3A-01562-F0=4g09w9kz3wz87li2kere0t8am89ne33u")
+	req.Header.Set("Content-Length", fmt.Sprintf("%d", len(encoded)))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Origin", fmt.Sprintf("http://%s", s.conf.RemoteHost))
-	req.Header.Set("Referer", fmt.Sprintf("http://%s/", s.conf.RemoteHost))
+	req.Header.Set("Referer", fmt.Sprintf("http://%s/login?", s.conf.RemoteHost))
 	req.Header.Set("Upgrade-Insecure-Requests", "1")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36")
 
 	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			log.Println("Redirect to:", req.URL)
-			// Optionally add headers on redirected request:
-			req.Header.Set("User-Agent", "Mozilla/5.0 ...")
-			return nil // return http.ErrUseLastResponse to stop redirect
-		},
+		Jar: jar,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}
-	client.Transport = cloudflarebp.AddCloudFlareByPass(client.Transport)
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to do request: %w", err)
@@ -75,7 +93,12 @@ func (s *Service) Auth() error {
 	defer reader.Close()
 
 	body, _ := io.ReadAll(reader)
-	log.Println("Status:", resp.Status)
-	log.Println("Body:", string(body))
+
+	sessionMatch := reSession.FindStringSubmatch(string(body))
+	if len(sessionMatch) < 2 {
+		return fmt.Errorf("invalid session header")
+	}
+
+	s.session.Store(sessionMatch[1])
 	return nil
 }
