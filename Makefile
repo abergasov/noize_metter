@@ -39,19 +39,16 @@ lint: install-lint ## Runs linters
 	golangci-lint run -c .golangci.yaml ./internal...
 	golangci-lint run -c .golangci.yaml ./cmd...
 
-lint_d:
-	docker run --rm -v ${PWD}:/app -w /app golangci/golangci-lint:v1.50 golangci-lint run --timeout 5m ./...
-
 build: ## Builds binary
 	@echo "-- building binary"
 	go build -ldflags="-X 'main.confFile=$(CURDIR)/configs/app_conf.yml'" -o ./bin/binary ./cmd
 
 patch_sudoers: ## Patch sudoers file
 	@echo "-- patching sudoers"
-	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/systemctl start maratonchecker.service" >> /etc/sudoers
-	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/systemctl stop maratonchecker.service" >> /etc/sudoers
-	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/systemctl restart maratonchecker.service" >> /etc/sudoers
-	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/journalctl -u maratonchecker.service -f" >> /etc/sudoers
+	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/systemctl start noizemetter.service" >> /etc/sudoers
+	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/systemctl stop noizemetter.service" >> /etc/sudoers
+	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/systemctl restart noizemetter.service" >> /etc/sudoers
+	sudo echo "$(CURRENT_USER) ALL=(ALL) NOPASSWD: /bin/journalctl -u noizemetter.service -f" >> /etc/sudoers
 
 coverage: ## Check test coverage is enough
 	@echo "Threshold:                ${COVERAGE_THRESHOLD}%"
