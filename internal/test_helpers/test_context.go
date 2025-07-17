@@ -2,10 +2,14 @@ package testhelpers
 
 import (
 	"context"
+	"github.com/stretchr/testify/require"
 	"noize_metter/internal/config"
 	"noize_metter/internal/logger"
 	"noize_metter/internal/repository"
-	samplerService "noize_metter/internal/service/sampler"
+	"noize_metter/internal/service/noise_metter"
+	"os"
+	"path"
+	"strings"
 	"testing"
 	"time"
 )
@@ -17,12 +21,12 @@ type TestContainer struct {
 
 	Repo *repository.Repo
 
-	ServiceSampler *samplerService.Service
+	ServiceNoise *noise_metter.Service
 }
 
 func GetClean(t *testing.T) *TestContainer {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	conf := getTestConfig()
+	conf := getTestConfig(t)
 
 	t.Cleanup(cancel)
 
@@ -31,18 +35,21 @@ func GetClean(t *testing.T) *TestContainer {
 	repo := repository.InitRepo()
 
 	// service init
-	serviceSampler := samplerService.InitService(ctx, appLog, repo)
+	serviceNoise := noise_metter.NewService(ctx, appLog, conf)
 	return &TestContainer{
-		Ctx:            ctx,
-		Cfg:            conf,
-		Logger:         appLog,
-		Repo:           repo,
-		ServiceSampler: serviceSampler,
+		Ctx:          ctx,
+		Cfg:          conf,
+		Logger:       appLog,
+		Repo:         repo,
+		ServiceNoise: serviceNoise,
 	}
 }
 
-func getTestConfig() *config.AppConfig {
-	return &config.AppConfig{
-		AppPort: 0,
-	}
+func getTestConfig(t *testing.T) *config.AppConfig {
+	dataPath, err := os.Getwd()
+	require.NoError(t, err)
+	data := strings.Split(dataPath, "noize_metter")
+	appConf, err := config.InitConf(path.Join(data[0], "noize_metter", "configs", "app_conf.yml"))
+	require.NoError(t, err)
+	return appConf
 }

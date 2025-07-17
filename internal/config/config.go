@@ -10,7 +10,9 @@ import (
 )
 
 type AppConfig struct {
-	AppPort int `yaml:"app_port"`
+	AppPort    int    `yaml:"app_port"`
+	RemoteHost string `yaml:"remote_host"`
+	RemotePass string `yaml:"remote_pass"`
 }
 
 func InitConf(confFile string) (*AppConfig, error) {

@@ -2,26 +2,26 @@ package routes
 
 import (
 	"noize_metter/internal/logger"
-	"noize_metter/internal/service/sampler"
+	"noize_metter/internal/service/noise_metter"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
 type Server struct {
-	appAddr    string
-	log        logger.AppLogger
-	service    *sampler.Service
-	httpEngine *fiber.App
+	appAddr      string
+	log          logger.AppLogger
+	serviceNoise *noise_metter.Service
+	httpEngine   *fiber.App
 }
 
 // InitAppRouter initializes the HTTP Server.
-func InitAppRouter(log logger.AppLogger, service *sampler.Service, address string) *Server {
+func InitAppRouter(log logger.AppLogger, serviceNoise *noise_metter.Service, address string) *Server {
 	app := &Server{
-		appAddr:    address,
-		httpEngine: fiber.New(fiber.Config{}),
-		service:    service,
-		log:        log.With(logger.WithService("http")),
+		appAddr:      address,
+		httpEngine:   fiber.New(fiber.Config{}),
+		serviceNoise: serviceNoise,
+		log:          log.With(logger.WithService("http")),
 	}
 	app.httpEngine.Use(recover.New())
 	app.initRoutes()
