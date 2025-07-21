@@ -121,6 +121,7 @@ func (s *Service) connectForSession() error {
 			Field2 []float64 `json:"123"`
 		} `json:"data"`
 	}
+	loc := time.Now().Location()
 	for {
 		_, msg, err = conn.ReadMessage()
 		if err != nil {
@@ -133,7 +134,7 @@ func (s *Service) connectForSession() error {
 		if err = json.Unmarshal(msg, &data); err != nil {
 			return fmt.Errorf("unmarshal data: %w", err)
 		}
-		tms, errP := time.Parse("15:04:05", data.Data.Timer)
+		tms, errP := time.ParseInLocation("15:04:05", data.Data.Timer, loc)
 		if errP != nil {
 			return fmt.Errorf("parse time: %w", errP)
 		}
