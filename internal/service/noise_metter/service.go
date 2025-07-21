@@ -42,6 +42,7 @@ func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfi
 	}
 	go srv.bgDumpData()
 	go srv.bgPruneOldFiles()
+	go srv.bgUploadData()
 	return srv
 }
 
