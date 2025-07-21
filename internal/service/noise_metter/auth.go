@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -37,7 +36,7 @@ func (s *Service) bgSetSession() {
 func (s *Service) Auth() error {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
-		log.Fatal(err)
+		s.log.Fatal("failed to create cookie jar", err)
 	}
 	form := url.Values{}
 	form.Set("p1", s.conf.RemotePass)
@@ -100,5 +99,6 @@ func (s *Service) Auth() error {
 	}
 
 	s.session.Store(sessionMatch[1])
+	s.cookie.Store(jar)
 	return nil
 }

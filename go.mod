@@ -6,6 +6,7 @@ require (
 	github.com/ethereum/go-ethereum v1.15.8
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/websocket v1.4.2
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
 	gopkg.in/yaml.v2 v2.4.0

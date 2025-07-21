@@ -7,5 +7,5 @@ import (
 
 func TestService(t *testing.T) {
 	container := testhelpers.GetClean(t)
-	container.ServiceNoise.Auth()
+	container.ServiceNoise.Run()
 }
