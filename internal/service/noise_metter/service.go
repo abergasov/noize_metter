@@ -4,38 +4,44 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"noize_metter/internal/config"
 	"noize_metter/internal/entities"
 	"noize_metter/internal/logger"
+	"noize_metter/internal/repository"
 	"noize_metter/internal/utils"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type Service struct {
 	ctx  context.Context
 	log  logger.AppLogger
 	conf *config.AppConfig
+	repo *repository.Repo
 
 	session atomic.Value
 	cookie  atomic.Value
 	items   *utils.RWSlice[entities.NoiseMeasures]
 }
 
-func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfig) *Service {
-	return &Service{
+func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfig, repo *repository.Repo) *Service {
+	srv := &Service{
 		ctx:     ctx,
 		log:     log.With(logger.WithService("noise_metter")),
 		conf:    conf,
+		repo:    repo,
 		session: atomic.Value{},
 		cookie:  atomic.Value{},
 		items:   utils.NewRWSlice[entities.NoiseMeasures](),
 	}
+	go srv.bgDumpData()
+	return srv
 }
 
 func (s *Service) Run() error {

@@ -10,9 +10,13 @@ import (
 )
 
 type AppConfig struct {
-	AppPort    int    `yaml:"app_port"`
-	RemoteHost string `yaml:"remote_host"`
-	RemotePass string `yaml:"remote_pass"`
+	AppPort       int    `yaml:"app_port"`
+	RemoteHost    string `yaml:"remote_host"`
+	RemotePass    string `yaml:"remote_pass"`
+	StorageFolder string `yaml:"storage_folder"`
+	DataHost      string `yaml:"data_host"`
+	APIKey        string `yaml:"api_key"`
+	AppFolder     string `yaml:"app_folder"`
 }
 
 func InitConf(confFile string) (*AppConfig, error) {

@@ -2,7 +2,6 @@ package testhelpers
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"noize_metter/internal/config"
 	"noize_metter/internal/logger"
 	"noize_metter/internal/repository"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 type TestContainer struct {
@@ -32,7 +33,7 @@ func GetClean(t *testing.T) *TestContainer {
 
 	appLog := logger.NewAppSLogger()
 	// repo init
-	repo := repository.InitRepo()
+	repo := repository.InitRepo(ctx, appLog, conf)
 
 	// service init
 	serviceNoise := noise_metter.NewService(ctx, appLog, conf)
