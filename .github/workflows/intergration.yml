@@ -80,3 +80,27 @@ jobs:
         run: CI_RUN="true" make test
       - name: Measure test coverage
         run: make coverage
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.go-version }}
+          cache: true
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: extract commit hash
+        run: echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: print version
+        run: echo "VERSION=${VERSION}"
+      - name: build app
+        run: make build
+      - name: send deploy hook
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST ${{ secrets.OPT_API_HOST }} \
+            -H "Content-Type: application/json" \
+            -H "auth-mapi: ${{ secrets.OPT_API_TOKEN }}" \
+            -d "{\"version\": \"${VERSION}\"}")
+          echo "Deploy hook responded with status code: $response"

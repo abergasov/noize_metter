@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"noize_metter/internal/config"
+	"noize_metter/internal/entities"
 	"noize_metter/internal/logger"
+	"noize_metter/internal/utils"
 	"sync/atomic"
 )
 
@@ -14,6 +16,7 @@ type Service struct {
 	conf *config.AppConfig
 
 	session atomic.Value
+	items   *utils.RWSlice[entities.NoiseMeasures]
 }
 
 func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfig) *Service {
@@ -22,6 +25,7 @@ func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfi
 		log:     log.With(logger.WithService("noise_metter")),
 		conf:    conf,
 		session: atomic.Value{},
+		items:   utils.NewRWSlice[entities.NoiseMeasures](),
 	}
 }
 
