@@ -37,7 +37,8 @@ func main() {
 
 	appLog.Info("init services")
 	notifier := notificator.NewSlackService(appLog, appConf)
-	noise_metter.NewService(ctx, appLog, appConf, repo).Run()
+	srv := noise_metter.NewService(ctx, appLog, appConf, repo)
+	go srv.Run()
 
 	// register app shutdown
 	c := make(chan os.Signal, 1)
@@ -45,4 +46,5 @@ func main() {
 	deployer.NewService(ctx, appConf, appLog, repo, notifier, c).Run()
 	<-c // This blocks the main thread until an interrupt is received
 	cancel()
+	srv.Stop()
 }

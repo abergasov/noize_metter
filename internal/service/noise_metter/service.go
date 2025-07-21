@@ -66,6 +66,11 @@ func (s *Service) Run() {
 	}
 }
 
+func (s *Service) Stop() {
+	s.log.Info("stopping service")
+	s.dumpData()
+}
+
 func (s *Service) connectForSession() error {
 	sessionID := s.session.Load().(string)
 	if sessionID == "" {
