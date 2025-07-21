@@ -40,6 +40,13 @@ func main() {
 	srv := noise_metter.NewService(ctx, appLog, appConf, repo)
 	go srv.Run()
 
+	if err = notifier.SendInfoMessage(
+		"Noise measurer started successfully",
+		"checker is running and ready to fetch noise measurements",
+	); err != nil {
+		appLog.Error("failed to send info message", err)
+	}
+
 	// register app shutdown
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
