@@ -1,6 +1,7 @@
 package noise_metter
 
 import (
+	"noize_metter/internal/logger"
 	"time"
 )
 
@@ -26,6 +27,7 @@ func (s *Service) dumpData() {
 	if len(data) == 0 {
 		return
 	}
+	s.log.Info("Dumping noise data", logger.WithInt("items", len(data)))
 	if err := s.repo.DumpNoiseRawData(data); err != nil {
 		s.log.Error("error saving noise data", err)
 	}
