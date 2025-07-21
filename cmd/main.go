@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"noize_metter/internal/config"
 	"noize_metter/internal/logger"
 	"noize_metter/internal/repository"
-	"noize_metter/internal/routes"
-	samplerService "noize_metter/internal/service/sampler"
+	"noize_metter/internal/service/deployer"
+	"noize_metter/internal/service/noise_metter"
+	"noize_metter/internal/service/notificator"
 
 	"os"
 	"os/signal"
@@ -33,27 +33,16 @@ func main() {
 	appLog.Info("create storage connections")
 
 	appLog.Info("init repositories")
-	repo := repository.InitRepo()
+	repo := repository.InitRepo(ctx, appLog, appConf)
 
 	appLog.Info("init services")
-	service := samplerService.InitService(ctx, appLog, repo)
-
-	appLog.Info("init http service")
-	appHTTPServer := routes.InitAppRouter(appLog, service, fmt.Sprintf(":%d", appConf.AppPort))
-	defer func() {
-		if err = appHTTPServer.Stop(); err != nil {
-			appLog.Fatal("unable to stop http service", err)
-		}
-	}()
-	go func() {
-		if err = appHTTPServer.Run(); err != nil {
-			appLog.Fatal("unable to start http service", err)
-		}
-	}()
+	notifier := notificator.NewSlackService(appLog, appConf)
+	noise_metter.NewService(ctx, appLog, appConf, repo).Run()
 
 	// register app shutdown
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	deployer.NewService(ctx, appConf, appLog, repo, notifier, c).Run()
 	<-c // This blocks the main thread until an interrupt is received
 	cancel()
 }
