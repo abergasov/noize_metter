@@ -121,7 +121,6 @@ func (s *Service) connectForSession() error {
 			Field2 []float64 `json:"123"`
 		} `json:"data"`
 	}
-	todayDate := time.Now().Format(time.DateOnly)
 	for {
 		_, msg, err = conn.ReadMessage()
 		if err != nil {
@@ -134,7 +133,7 @@ func (s *Service) connectForSession() error {
 		if err = json.Unmarshal(msg, &data); err != nil {
 			return fmt.Errorf("unmarshal data: %w", err)
 		}
-		tms, errP := time.Parse(time.DateTime, fmt.Sprintf("%s %s", todayDate, data.Data.Timer))
+		tms, errP := time.Parse(time.DateTime, fmt.Sprintf("%s %s", time.Now().Format(time.DateOnly), data.Data.Timer))
 		if errP != nil {
 			return fmt.Errorf("parse time: %w", errP)
 		}
