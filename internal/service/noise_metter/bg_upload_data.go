@@ -3,7 +3,7 @@ package noise_metter
 import "time"
 
 var (
-	uploadDataDuration = 5 * time.Minute // Duration for uploading data
+	uploadDataDuration = 1 * time.Minute // Duration for uploading data
 )
 
 func (s *Service) bgUploadData() {

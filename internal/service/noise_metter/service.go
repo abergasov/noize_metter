@@ -89,7 +89,7 @@ func (s *Service) connectForSession() error {
 	}
 	header.Set("Cookie", cookieHeader)
 
-	conn, _, err := websocket.DefaultDialer.Dial(u.String(), header)
+	conn, _, err := websocket.DefaultDialer.DialContext(s.ctx, u.String(), header)
 	if err != nil {
 		return fmt.Errorf("dial: %w", err)
 	}

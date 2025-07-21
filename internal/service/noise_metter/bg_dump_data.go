@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	dumpDataDuration = 5 * time.Minute // Duration for saving candidates
+	dumpDataDuration = 1 * time.Minute // Duration for saving candidates
 )
 
 func (s *Service) bgDumpData() {
