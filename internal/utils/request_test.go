@@ -3,15 +3,15 @@ package utils_test
 import (
 	"context"
 	"fmt"
-	"maraton_checker/internal/utils"
 	"net/http"
+	testhelpers "noize_metter/internal/test_helpers"
+	"noize_metter/internal/utils"
 	"testing"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/google/uuid"
-	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/require"
 )
 
@@ -169,8 +169,7 @@ type testServer struct {
 
 // newTestServer creates a new test server for testing http requests.
 func newTestServer(t *testing.T) (fakeServer *testServer, address string) {
-	appPort, err := freeport.GetFreePort()
-	require.NoError(t, err, "failed to get free port for app")
+	appPort := testhelpers.GetFreePort(t)
 	fakeServer = &testServer{
 		address: fmt.Sprintf(":%d", appPort),
 		httpEngine: fiber.New(fiber.Config{
