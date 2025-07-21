@@ -44,25 +44,24 @@ func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfi
 	return srv
 }
 
-func (s *Service) Run() error {
+func (s *Service) Run() {
 	s.log.Info("starting Noise Metter service...")
 	s.session.Store("")
 	if err := s.Auth(); err != nil {
-		return fmt.Errorf("authentication failed: %w", err)
+		s.log.Fatal("auth err: ", err)
 	}
 	go s.bgSetSession()
 	// Placeholder for actual service logic
 	select {
 	case <-s.ctx.Done():
 		s.log.Info("Noise Metter service stopped.")
-		return nil
+		return
 	default:
 		if err := s.connectForSession(); err != nil {
 			s.log.Error("failed to connect for session", err)
 			time.Sleep(5 * time.Second)
 		}
 	}
-	return nil
 }
 
 func (s *Service) connectForSession() error {
