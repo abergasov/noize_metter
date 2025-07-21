@@ -65,6 +65,12 @@ deploy: ## Deploy systemd service
 	sudo systemctl stop noizemetter.service
 	sudo systemctl start noizemetter.service
 
+self_deploy: ## Deploy self from application
+	@echo "-- deploying self"
+	git pull origin master
+	go mod download
+	make build
+
 logs: ## Show logs of service
 	sudo journalctl -u noizemetter.service -f | awk -F']: ' '{print $$2}'
 
@@ -79,5 +85,5 @@ install_service: patch_sudoers ## Install service
 	@echo "-- enable service"
 	sudo service noizemetter start && sudo systemctl enable noizemetter
 
-.PHONY: help install-lint test gogen lint build run vulcheck coverage patch_sudoers deploy logs install_service
+.PHONY: help install-lint test gogen lint build run vulcheck coverage patch_sudoers deploy logs install_service self_deploy
 .DEFAULT_GOAL := help
