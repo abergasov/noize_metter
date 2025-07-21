@@ -51,7 +51,9 @@ func (s *Service) pruneOldFiles() {
 			fullPath := filepath.Join(s.conf.StorageFolder, name)
 			if err = os.Remove(fullPath); err != nil {
 				l.Error("failed to remove old file", err)
+				continue
 			}
+			l.Info("removed old file")
 		}
 	}
 }

@@ -60,6 +60,7 @@ func (s *Service) uploadData() {
 		if err = os.Remove(filePath); err != nil {
 			l.Error("failed to remove file after upload", err)
 		}
+		l.Info("successfully uploaded and removed file", logger.WithInt("items", len(data)))
 	}
 }
 
