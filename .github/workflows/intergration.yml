@@ -29,8 +29,6 @@ jobs:
         run: echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: print version
         run: echo "VERSION=${VERSION}"
-      - name: build app
-        run: make build
       - name: send deploy hook
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" -X POST ${{ secrets.OPT_API_HOST }} \
