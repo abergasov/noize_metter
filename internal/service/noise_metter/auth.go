@@ -34,6 +34,7 @@ func (s *Service) bgSetSession() {
 }
 
 func (s *Service) Auth() error {
+	s.log.Info("authentication started")
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		s.log.Fatal("failed to create cookie jar", err)
@@ -100,5 +101,6 @@ func (s *Service) Auth() error {
 
 	s.session.Store(sessionMatch[1])
 	s.cookie.Store(jar)
+	s.log.Info("session stored")
 	return nil
 }
