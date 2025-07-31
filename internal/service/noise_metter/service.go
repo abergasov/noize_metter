@@ -133,13 +133,10 @@ func (s *Service) connectForSession() error {
 		if err = json.Unmarshal(msg, &data); err != nil {
 			return fmt.Errorf("unmarshal data: %w", err)
 		}
-		tms, errP := time.Parse(time.DateTime, fmt.Sprintf("%s %s", time.Now().Format(time.DateOnly), data.Data.Timer))
-		if errP != nil {
-			return fmt.Errorf("parse time: %w", errP)
-		}
 		if len(data.Data.Field2) != 5 {
 			return fmt.Errorf("expected 5 noise measures, got %d", len(data.Data.Field2))
 		}
+		tms := time.Now()
 		s.items.Add(entities.NoiseMeasures{
 			Timestamp:    tms,
 			TimestampNum: utils.TimeToDayIntNum(tms),
