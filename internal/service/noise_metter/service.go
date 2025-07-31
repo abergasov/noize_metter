@@ -114,7 +114,6 @@ func (s *Service) connectForSession() error {
 		return fmt.Errorf("send START command failed: %w", err)
 	}
 
-	// Stream data
 	type streamData struct {
 		Data struct {
 			Timer  string    `json:"timer"`
