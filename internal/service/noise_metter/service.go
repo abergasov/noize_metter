@@ -147,7 +147,7 @@ func (s *Service) connectForSession() error {
 			LAeqG10: data.Data.Field2[3],
 			LAeqG5:  data.Data.Field2[4],
 		})
-		println(data.Data.Field2[0],
+		println(msg, data.Data.Field2[0],
 			data.Data.Field2[1],
 			data.Data.Field2[2],
 			data.Data.Field2[3],
