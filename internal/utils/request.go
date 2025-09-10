@@ -85,7 +85,7 @@ func executeWithDefaultClient[T any](req *http.Request, decoder func(io.Reader) 
 	}
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return res, 0, fmt.Errorf("failed to read response body: %w", err)
+		return res, resp.StatusCode, fmt.Errorf("failed to read response body: %w", err)
 	}
 	var result T
 	if len(strings.TrimSpace(strings.Replace(string(b), "\"", "", -1))) > 0 {

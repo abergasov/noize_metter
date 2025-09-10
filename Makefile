@@ -83,7 +83,7 @@ install_service: patch_sudoers ## Install service
 	@sed -i 's|^User=.*|User=$(shell whoami)|' noizemetter.service.local
 	sudo cp noizemetter.service.local /etc/systemd/system/noizemetter.service
 	@echo "-- enable service"
-	sudo service noizemetter start && sudo systemctl enable noizemetter
+	sudo systemctl noizemetter start && sudo systemctl enable noizemetter
 
 .PHONY: help install-lint test gogen lint build run vulcheck coverage patch_sudoers deploy logs install_service self_deploy
 .DEFAULT_GOAL := help

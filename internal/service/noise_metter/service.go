@@ -54,14 +54,16 @@ func (s *Service) Run() {
 	}
 	go s.bgSetSession()
 	// Placeholder for actual service logic
-	select {
-	case <-s.ctx.Done():
-		s.log.Info("Noise Metter service stopped.")
-		return
-	default:
-		if err := s.connectForSession(); err != nil {
-			s.log.Error("failed to connect for session", err)
-			time.Sleep(5 * time.Second)
+	for {
+		select {
+		case <-s.ctx.Done():
+			s.log.Info("Noise Metter service stopped.")
+			return
+		default:
+			if err := s.connectForSession(); err != nil {
+				s.log.Error("failed to connect for session", err)
+				time.Sleep(5 * time.Second)
+			}
 		}
 	}
 }

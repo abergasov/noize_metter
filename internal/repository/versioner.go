@@ -17,7 +17,7 @@ func (r *Repo) FetchLatestVersion(ctx context.Context) (string, error) {
 		"auth-mapi":    r.conf.APIKey,
 	})
 	if err != nil {
-		return "", fmt.Errorf("get noiser version: %w", err)
+		return "", fmt.Errorf("get noiser version, code %d: %w", code, err)
 	}
 	if code != http.StatusOK {
 		return "", fmt.Errorf("get noiser version: %d", code)
