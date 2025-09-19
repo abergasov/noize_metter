@@ -854,3 +854,7 @@ type DiscreteRegister struct {
 	T1LossOfACAlarm89                      bool
 	T1LossOfDCAlarm89                      bool
 }
+
+func (m ModbusRegisters) GetTimestampNum() int64 {
+	return m.TimestampNum
+}

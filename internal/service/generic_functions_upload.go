@@ -1,4 +1,4 @@
-package noise_metter
+package service
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"noize_metter/internal/entities"
+	"noize_metter/internal/config"
 	"noize_metter/internal/logger"
 	"noize_metter/internal/utils"
 	"os"
@@ -20,40 +20,44 @@ var (
 	uploadDataDuration = 1 * time.Minute // Duration for uploading data
 )
 
-func (s *Service) bgUploadData() {
+type HasTimestamp interface {
+	GetTimestampNum() int64
+}
+
+func BGUploadData[T HasTimestamp](ctx context.Context, log logger.AppLogger, conf *config.AppConfig, hostURL, storageFolder string) {
 	ticker := time.NewTicker(uploadDataDuration)
 	defer ticker.Stop()
 	for {
 		select {
-		case <-s.ctx.Done():
+		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			s.uploadData()
+			UploadData[T](log, conf, hostURL, storageFolder)
 		}
 	}
 }
 
-func (s *Service) uploadData() {
-	entries, err := os.ReadDir(s.conf.StorageNoiseFolder)
+func UploadData[T HasTimestamp](log logger.AppLogger, conf *config.AppConfig, hostURL, storageFolder string) {
+	entries, err := os.ReadDir(storageFolder)
 	if err != nil {
-		s.log.Fatal("error reading storage folder", err)
+		log.Fatal("error reading storage folder", err)
 	}
 	for _, e := range entries {
 		if e.IsDir() {
 			continue
 		}
 		name := e.Name()
-		l := s.log.With(logger.WithString("file", name))
+		l := log.With(logger.WithString("file", name))
 		if !strings.HasSuffix(name, ".gz") {
 			continue
 		}
-		filePath := filepath.Join(s.conf.StorageNoiseFolder, name)
-		data, errL := loadChunk[entities.NoiseMeasures](filePath)
+		filePath := filepath.Join(storageFolder, name)
+		data, errL := LoadChunk[T](filePath)
 		if errL != nil {
 			l.Error("failed to load noise data file", errL)
 			continue
 		}
-		if errL = s.uploadChunk(l, filePath, data); errL != nil {
+		if errL = uploadChunk[T](l, hostURL, conf.APIKey, conf.BoxIP, filePath, data); errL != nil {
 			l.Error("failed to upload chunk", errL)
 			continue
 		}
@@ -64,14 +68,14 @@ func (s *Service) uploadData() {
 	}
 }
 
-func (s *Service) uploadChunk(l logger.AppLogger, fileName string, data []entities.NoiseMeasures) error {
+func uploadChunk[T HasTimestamp](l logger.AppLogger, hostURL, apiKey, boxIP, fileName string, data []T) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 
-	filtered := make([]entities.NoiseMeasures, 0, len(data))
+	filtered := make([]T, 0, len(data))
 	zeroRows := 0
 	for i := range data {
-		if data[i].TimestampNum == 0 {
+		if data[i].GetTimestampNum() == 0 {
 			zeroRows++
 			continue
 		}
@@ -90,14 +94,13 @@ func (s *Service) uploadChunk(l logger.AppLogger, fileName string, data []entiti
 		return nil
 	}
 
-	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/noiser/upload_data", s.conf.DataHost)
 	_, code, err := utils.PostCurl[any](ctx, hostURL, map[string]any{
-		"file_name":      fileName,
-		"source":         s.conf.BoxIP,
-		"noise_measures": filtered,
+		"file_name": fileName,
+		"source":    boxIP,
+		"measures":  filtered,
 	}, map[string]string{
 		"Content-Type": "application/json",
-		"auth-mapi":    s.conf.APIKey,
+		"auth-mapi":    apiKey,
 	})
 	if code == http.StatusOK {
 		return nil
@@ -108,7 +111,7 @@ func (s *Service) uploadChunk(l logger.AppLogger, fileName string, data []entiti
 	return fmt.Errorf("unexpected status code: %d", code)
 }
 
-func loadChunk[T any](filePath string) ([]T, error) {
+func LoadChunk[T any](filePath string) ([]T, error) {
 	data, err := utils.LoadFromFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load file %s: %w", filePath, err)

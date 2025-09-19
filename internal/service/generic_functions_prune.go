@@ -1,4 +1,4 @@
-package utils
+package service
 
 import (
 	"context"
@@ -17,12 +17,12 @@ func BGPruneOldFiles(ctx context.Context, log logger.AppLogger, storageFolder st
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			PruneOldFiles(log, storageFolder)
+			pruneOldFiles(log, storageFolder)
 		}
 	}
 }
 
-func PruneOldFiles(log logger.AppLogger, storageFolder string) {
+func pruneOldFiles(log logger.AppLogger, storageFolder string) {
 	cutoff := time.Now().Add(-6 * 24 * time.Hour)
 	entries, err := os.ReadDir(storageFolder)
 	if err != nil {
