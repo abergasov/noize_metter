@@ -34,7 +34,7 @@ func (s *Service) bgUploadData() {
 }
 
 func (s *Service) uploadData() {
-	entries, err := os.ReadDir(s.conf.StorageFolder)
+	entries, err := os.ReadDir(s.conf.StorageNoiseFolder)
 	if err != nil {
 		s.log.Fatal("error reading storage folder", err)
 	}
@@ -47,7 +47,7 @@ func (s *Service) uploadData() {
 		if !strings.HasSuffix(name, ".gz") {
 			continue
 		}
-		filePath := filepath.Join(s.conf.StorageFolder, name)
+		filePath := filepath.Join(s.conf.StorageNoiseFolder, name)
 		data, errL := loadChunk[entities.NoiseMeasures](filePath)
 		if errL != nil {
 			l.Error("failed to load noise data file", errL)

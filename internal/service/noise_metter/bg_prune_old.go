@@ -23,9 +23,9 @@ func (s *Service) bgPruneOldFiles() {
 
 func (s *Service) pruneOldFiles() {
 	cutoff := time.Now().Add(-6 * 24 * time.Hour)
-	entries, err := os.ReadDir(s.conf.StorageFolder)
+	entries, err := os.ReadDir(s.conf.StorageNoiseFolder)
 	if err != nil {
-		s.log.Fatal("failed to read directory", err, logger.WithString("folder", s.conf.StorageFolder))
+		s.log.Fatal("failed to read directory", err, logger.WithString("folder", s.conf.StorageNoiseFolder))
 	}
 	for _, e := range entries {
 		if e.IsDir() {
@@ -48,7 +48,7 @@ func (s *Service) pruneOldFiles() {
 			continue
 		}
 		if t.Before(cutoff) {
-			fullPath := filepath.Join(s.conf.StorageFolder, name)
+			fullPath := filepath.Join(s.conf.StorageNoiseFolder, name)
 			if err = os.Remove(fullPath); err != nil {
 				l.Error("failed to remove old file", err)
 				continue
