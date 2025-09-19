@@ -45,6 +45,7 @@ func NewService(
 		repo:     repo,
 		items:    utils.NewRWSlice[entities.ModbusRegisters](),
 	}
+	go utils.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageSubstationFolder)
 	go srv.bgDumpData()
 	return srv, nil
 }

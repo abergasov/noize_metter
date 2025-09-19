@@ -41,7 +41,7 @@ func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfi
 		items:   utils.NewRWSlice[entities.NoiseMeasures](),
 	}
 	go srv.bgDumpData()
-	go srv.bgPruneOldFiles()
+	go utils.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageNoiseFolder)
 	go srv.bgUploadData()
 	return srv
 }
