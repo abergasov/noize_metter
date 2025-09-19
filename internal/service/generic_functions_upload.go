@@ -57,7 +57,7 @@ func UploadData[T HasTimestamp](log logger.AppLogger, conf *config.AppConfig, ho
 			l.Error("failed to load noise data file", errL)
 			continue
 		}
-		if errL = UploadChunk[T](l, hostURL, conf.APIKey, conf.BoxIP, filePath, data); errL != nil {
+		if errL = uploadChunk[T](l, hostURL, conf.APIKey, conf.BoxIP, filePath, data); errL != nil {
 			l.Error("failed to upload chunk", errL)
 			continue
 		}
@@ -68,7 +68,7 @@ func UploadData[T HasTimestamp](log logger.AppLogger, conf *config.AppConfig, ho
 	}
 }
 
-func UploadChunk[T HasTimestamp](l logger.AppLogger, hostURL, apiKey, boxIP, fileName string, data []T) error {
+func uploadChunk[T HasTimestamp](l logger.AppLogger, hostURL, apiKey, boxIP, fileName string, data []T) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 
