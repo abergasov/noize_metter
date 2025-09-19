@@ -14,7 +14,7 @@ import (
 )
 
 func (r *Repo) DumpNoiseRawData(items []entities.NoiseMeasures) error {
-	return saveItems(r.conf.StorageFolder, "noise_raw", items)
+	return saveItems(r.conf.StorageNoiseFolder, "noise_raw", items)
 }
 
 func saveItems[T any](storageFolder, postfix string, items []T) error {

@@ -14,8 +14,11 @@ type Repo struct {
 }
 
 func InitRepo(ctx context.Context, log logger.AppLogger, conf *config.AppConfig) *Repo {
-	if err := os.MkdirAll(conf.StorageFolder, 0o755); err != nil {
-		log.Fatal("error creating storage folder", err)
+	if err := os.MkdirAll(conf.StorageNoiseFolder, 0o755); err != nil {
+		log.Fatal("error creating noise storage folder", err)
+	}
+	if err := os.MkdirAll(conf.StorageSubstationFolder, 0o755); err != nil {
+		log.Fatal("error creating substation storage folder", err)
 	}
 	return &Repo{
 		ctx:  ctx,

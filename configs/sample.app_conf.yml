@@ -1,7 +1,9 @@
 app_port: 8000
 remote_host: 10.10.10.10
 remote_pass: pawssword
-storage_folder: /tmp/noise
+storage_noise_folder: /tmp/noise
+storage_substation_folder: /tmp/substation
 data_host: https://example.com
 api_key: b1233hL
 app_folder: /tmp/app
+cf_modbus_host: tcp://127.0.0.1:502

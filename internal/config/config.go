@@ -10,16 +10,18 @@ import (
 )
 
 type AppConfig struct {
-	AppPort       int      `yaml:"app_port"`
-	SlackHookURLs []string `yaml:"slack_hook_urls"`
-	RemoteHost    string   `yaml:"remote_host"`
-	RemotePass    string   `yaml:"remote_pass"`
-	StorageFolder string   `yaml:"storage_folder"`
-	DataHost      string   `yaml:"data_host"`
-	APIKey        string   `yaml:"api_key"`
-	AppFolder     string   `yaml:"app_folder"`
-	BoxName       string   `yaml:"box_name"`
-	BoxIP         string   `yaml:"box_ip"`
+	AppPort                 int      `yaml:"app_port"`
+	SlackHookURLs           []string `yaml:"slack_hook_urls"`
+	RemoteHost              string   `yaml:"remote_host"`
+	RemotePass              string   `yaml:"remote_pass"`
+	StorageNoiseFolder      string   `yaml:"storage_noise_folder"`
+	StorageSubstationFolder string   `yaml:"storage_substation_folder"`
+	DataHost                string   `yaml:"data_host"`
+	APIKey                  string   `yaml:"api_key"`
+	AppFolder               string   `yaml:"app_folder"`
+	BoxName                 string   `yaml:"box_name"`
+	BoxIP                   string   `yaml:"box_ip"`
+	CFModbusHost            string   `yaml:"cf_modbus_host"`
 }
 
 func InitConf(confFile string) (*AppConfig, error) {

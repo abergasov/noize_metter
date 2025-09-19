@@ -7,6 +7,7 @@ import (
 	"noize_metter/internal/repository"
 	"noize_metter/internal/service/noise_metter"
 	"noize_metter/internal/service/notificator"
+	"noize_metter/internal/service/substation"
 	"os"
 	"path"
 	"strings"
@@ -24,6 +25,7 @@ type TestContainer struct {
 	Repo *repository.Repo
 
 	ServiceNoise            *noise_metter.Service
+	ServiceSubstation       *substation.Service
 	ServiceSlackNotificator *notificator.SlackService
 }
 
@@ -39,12 +41,15 @@ func GetClean(t *testing.T) *TestContainer {
 
 	// service init
 	serviceNoise := noise_metter.NewService(ctx, appLog, conf, repo)
+	serviceSubstation, err := substation.NewService(ctx, appLog, conf, repo)
+	require.NoError(t, err)
 	return &TestContainer{
 		Ctx:                     ctx,
 		Cfg:                     conf,
 		Logger:                  appLog,
 		Repo:                    repo,
 		ServiceNoise:            serviceNoise,
+		ServiceSubstation:       serviceSubstation,
 		ServiceSlackNotificator: notificator.NewSlackService(appLog, conf),
 	}
 }

@@ -1,6 +1,7 @@
-package noise_metter
+package utils
 
 import (
+	"context"
 	"noize_metter/internal/logger"
 	"os"
 	"path/filepath"
@@ -8,31 +9,31 @@ import (
 	"time"
 )
 
-func (s *Service) bgPruneOldFiles() {
+func BGPruneOldFiles(ctx context.Context, log logger.AppLogger, storageFolder string) {
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
 	for {
 		select {
-		case <-s.ctx.Done():
+		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			s.pruneOldFiles()
+			PruneOldFiles(log, storageFolder)
 		}
 	}
 }
 
-func (s *Service) pruneOldFiles() {
+func PruneOldFiles(log logger.AppLogger, storageFolder string) {
 	cutoff := time.Now().Add(-6 * 24 * time.Hour)
-	entries, err := os.ReadDir(s.conf.StorageFolder)
+	entries, err := os.ReadDir(storageFolder)
 	if err != nil {
-		s.log.Fatal("failed to read directory", err, logger.WithString("folder", s.conf.StorageFolder))
+		log.Fatal("failed to read directory", err, logger.WithString("folder", storageFolder))
 	}
 	for _, e := range entries {
 		if e.IsDir() {
 			continue
 		}
 		name := e.Name()
-		l := s.log.With(logger.WithString("file", name))
+		l := log.With(logger.WithString("file", name))
 		if !strings.HasSuffix(name, ".gz") {
 			continue
 		}
@@ -48,7 +49,7 @@ func (s *Service) pruneOldFiles() {
 			continue
 		}
 		if t.Before(cutoff) {
-			fullPath := filepath.Join(s.conf.StorageFolder, name)
+			fullPath := filepath.Join(storageFolder, name)
 			if err = os.Remove(fullPath); err != nil {
 				l.Error("failed to remove old file", err)
 				continue
