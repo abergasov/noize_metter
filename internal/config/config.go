@@ -20,6 +20,7 @@ type AppConfig struct {
 	AppFolder     string   `yaml:"app_folder"`
 	BoxName       string   `yaml:"box_name"`
 	BoxIP         string   `yaml:"box_ip"`
+	CFModbusHost  string   `yaml:"cf_modbus_host"`
 }
 
 func InitConf(confFile string) (*AppConfig, error) {

@@ -7,6 +7,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.4.2
+	github.com/simonvetter/modbus v1.6.3
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
 	gopkg.in/yaml.v2 v2.4.0
@@ -15,6 +16,7 @@ require (
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/goburrow/serial v0.1.0 // indirect
 	github.com/holiman/uint256 v1.3.2 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect

@@ -9,6 +9,7 @@ import (
 	"noize_metter/internal/service/deployer"
 	"noize_metter/internal/service/noise_metter"
 	"noize_metter/internal/service/notificator"
+	"noize_metter/internal/service/substation"
 
 	"os"
 	"os/signal"
@@ -37,8 +38,14 @@ func main() {
 
 	appLog.Info("init services")
 	notifier := notificator.NewSlackService(appLog, appConf)
-	srv := noise_metter.NewService(ctx, appLog, appConf, repo)
-	go srv.Run()
+	srvNoiser := noise_metter.NewService(ctx, appLog, appConf, repo)
+	go srvNoiser.Run()
+
+	srvSubstation, err := substation.NewService(ctx, appLog, appConf, repo)
+	if err != nil {
+		appLog.Fatal("failed to create substation service", err)
+	}
+	go srvSubstation.Run()
 
 	if err = notifier.SendInfoMessage(
 		"Noise measurer started successfully",
@@ -53,5 +60,6 @@ func main() {
 	deployer.NewService(ctx, appConf, appLog, repo, notifier, c).Run()
 	<-c // This blocks the main thread until an interrupt is received
 	cancel()
-	srv.Stop()
+	srvNoiser.Stop()
+	srvSubstation.Stop()
 }

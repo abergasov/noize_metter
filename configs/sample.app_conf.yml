@@ -5,3 +5,4 @@ storage_folder: /tmp/noise
 data_host: https://example.com
 api_key: b1233hL
 app_folder: /tmp/app
+cf_modbus_host: tcp://127.0.0.1:502
