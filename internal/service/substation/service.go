@@ -8,6 +8,7 @@ import (
 	"noize_metter/internal/entities"
 	"noize_metter/internal/logger"
 	"noize_metter/internal/repository"
+	"noize_metter/internal/service"
 	"noize_metter/internal/utils"
 	"time"
 
@@ -45,12 +46,17 @@ func NewService(
 		repo:     repo,
 		items:    utils.NewRWSlice[entities.ModbusRegisters](),
 	}
-	go utils.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageSubstationFolder)
 	go srv.bgDumpData()
+	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/substation/upload_data", conf.DataHost)
+	go service.BGUploadData[entities.ModbusRegisters](ctx, log, conf, hostURL, conf.StorageSubstationFolder)
+	go service.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageSubstationFolder)
 	return srv, nil
 }
 
-func (s *Service) Stop() {}
+func (s *Service) Stop() {
+	s.log.Info("stopping service")
+	s.dumpData()
+}
 
 func ParseFloat32(valueA, valueB uint16) float32 {
 	uint32Value := uint32(valueA)<<16 | uint32(valueB)

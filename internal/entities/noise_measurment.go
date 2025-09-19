@@ -14,3 +14,7 @@ type NoiseMeasures struct {
 	LAeqG10 float64 `db:"laeq_g10" json:"laeq_g10" parquet:"name=laeq_g10, type=DOUBLE"`
 	LAeqG5  float64 `db:"laeq_g5" json:"laeq_g5" parquet:"name=laeq_g5, type=DOUBLE"`
 }
+
+func (m NoiseMeasures) GetTimestampNum() int64 {
+	return m.TimestampNum
+}

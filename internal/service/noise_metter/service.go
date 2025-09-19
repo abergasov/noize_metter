@@ -11,6 +11,7 @@ import (
 	"noize_metter/internal/entities"
 	"noize_metter/internal/logger"
 	"noize_metter/internal/repository"
+	"noize_metter/internal/service"
 	"noize_metter/internal/utils"
 	"strings"
 	"sync/atomic"
@@ -41,8 +42,9 @@ func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfi
 		items:   utils.NewRWSlice[entities.NoiseMeasures](),
 	}
 	go srv.bgDumpData()
-	go utils.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageNoiseFolder)
-	go srv.bgUploadData()
+	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/noiser/upload_data", conf.DataHost)
+	go service.BGUploadData[entities.NoiseMeasures](ctx, log, conf, hostURL, conf.StorageNoiseFolder)
+	go service.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageNoiseFolder)
 	return srv
 }
 
