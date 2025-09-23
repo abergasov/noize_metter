@@ -20,6 +20,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const (
+	thresholdForDump = 90
+)
+
 type Service struct {
 	ctx  context.Context
 	log  logger.AppLogger
@@ -42,7 +46,7 @@ func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfi
 		session:     atomic.Value{},
 		cookie:      atomic.Value{},
 		items:       utils.NewRWSlice[entities.NoiseMeasures](),
-		recordTasks: make(chan *RecordTask, 100),
+		recordTasks: make(chan *RecordTask, 1_000),
 	}
 	go srv.bgDumpData()
 	go srv.bgFetchRecordTasks()
@@ -154,5 +158,17 @@ func (s *Service) connectForSession() error {
 			LAeqG10: data.Data.Field2[3],
 			LAeqG5:  data.Data.Field2[4],
 		})
+		shouldRecord := false
+		triggeredValue := float64(0)
+		for i := 0; i < 5; i++ {
+			if data.Data.Field2[i] > thresholdForDump {
+				shouldRecord = true
+				triggeredValue = data.Data.Field2[i]
+				break
+			}
+		}
+		if shouldRecord {
+			s.addRecordTask(time.Now().Add(-1*15*time.Second), 60*time.Second, triggeredValue)
+		}
 	}
 }

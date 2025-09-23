@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -11,14 +12,20 @@ import (
 )
 
 type RecordTask struct {
-	StartTime time.Time
-	Duration  time.Duration
+	StartTime   time.Time
+	Duration    time.Duration
+	TriggeredBy float64
 }
 
-func (s *Service) addRecordTask(startTime time.Time, duration time.Duration) {
+var (
+	lastProcessedTask *RecordTask
+)
+
+func (s *Service) addRecordTask(startTime time.Time, duration time.Duration, triggeredBy float64) {
 	s.recordTasks <- &RecordTask{
-		StartTime: startTime,
-		Duration:  duration,
+		StartTime:   startTime,
+		Duration:    duration,
+		TriggeredBy: triggeredBy,
 	}
 }
 
@@ -34,6 +41,17 @@ func (s *Service) bgFetchRecordTasks() {
 }
 
 func (s *Service) RecordSoundWrapper(task *RecordTask) {
+	// walk over processed tasks and skip if already processed
+	if lastProcessedTask == nil {
+		lastProcessedTask = task
+	} else {
+		endTime := lastProcessedTask.StartTime.Add(lastProcessedTask.Duration)
+		if task.StartTime.Before(endTime) {
+			return
+		}
+		lastProcessedTask = task
+	}
+
 	// wait till now will be after task.StartTime+task.Duration + 4 seconds just in case
 	endTime := task.StartTime.Add(task.Duration).Add(4 * time.Second)
 	for {
@@ -72,6 +90,7 @@ func (s *Service) RecordSound(task *RecordTask) error {
 	result := make([]byte, 0, 1_000_000)
 	result = append(result, intToBytes(uint64(task.StartTime.Unix()))...)
 	result = append(result, intToBytes(uint64(task.Duration.Seconds()))...)
+	result = append(result, floatToBytes(task.TriggeredBy)...)
 	for {
 		_, msg, err = conn.ReadMessage()
 		if err != nil {
@@ -103,5 +122,11 @@ func (s *Service) RecordSound(task *RecordTask) error {
 func intToBytes(n uint64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, n)
+	return b
+}
+
+func floatToBytes(f float64) []byte {
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, math.Float64bits(f))
 	return b
 }
