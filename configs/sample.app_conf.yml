@@ -3,6 +3,7 @@ remote_host: 10.10.10.10
 remote_pass: pawssword
 storage_noise_folder: /tmp/noise
 storage_substation_folder: /tmp/substation
+storage_audio_folder: /tmp/audio
 data_host: https://example.com
 api_key: b1233hL
 app_folder: /tmp/app

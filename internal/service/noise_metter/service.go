@@ -20,6 +20,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const (
+	thresholdForDump = 90
+)
+
 type Service struct {
 	ctx  context.Context
 	log  logger.AppLogger
@@ -29,19 +33,23 @@ type Service struct {
 	session atomic.Value
 	cookie  atomic.Value
 	items   *utils.RWSlice[entities.NoiseMeasures]
+
+	recordTasks chan *RecordTask
 }
 
 func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfig, repo *repository.Repo) *Service {
 	srv := &Service{
-		ctx:     ctx,
-		log:     log.With(logger.WithService("noise_metter")),
-		conf:    conf,
-		repo:    repo,
-		session: atomic.Value{},
-		cookie:  atomic.Value{},
-		items:   utils.NewRWSlice[entities.NoiseMeasures](),
+		ctx:         ctx,
+		log:         log.With(logger.WithService("noise_metter")),
+		conf:        conf,
+		repo:        repo,
+		session:     atomic.Value{},
+		cookie:      atomic.Value{},
+		items:       utils.NewRWSlice[entities.NoiseMeasures](),
+		recordTasks: make(chan *RecordTask, 1_000),
 	}
 	go srv.bgDumpData()
+	go srv.bgFetchRecordTasks()
 	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/noiser/upload_data", conf.DataHost)
 	go service.BGUploadData[entities.NoiseMeasures](ctx, log, conf, hostURL, conf.StorageNoiseFolder)
 	go service.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageNoiseFolder)
@@ -150,5 +158,17 @@ func (s *Service) connectForSession() error {
 			LAeqG10: data.Data.Field2[3],
 			LAeqG5:  data.Data.Field2[4],
 		})
+		shouldRecord := false
+		triggeredValue := float64(0)
+		for i := 0; i < 5; i++ {
+			if data.Data.Field2[i] > thresholdForDump {
+				shouldRecord = true
+				triggeredValue = data.Data.Field2[i]
+				break
+			}
+		}
+		if shouldRecord {
+			s.addRecordTask(time.Now().Add(-1*15*time.Second), 60*time.Second, triggeredValue)
+		}
 	}
 }

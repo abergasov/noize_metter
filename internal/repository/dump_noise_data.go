@@ -17,6 +17,16 @@ func (r *Repo) DumpNoiseRawData(items []entities.NoiseMeasures) error {
 	return saveItems(r.conf.StorageNoiseFolder, "noise_raw", items)
 }
 
+func (r *Repo) DumpNoiseAudioRaw(rawWaw []byte) error {
+	id := uuid.NewString()[:8]
+	fileName := fmt.Sprintf("%s_%s_%s.wav", time.Now().UTC().Format("20060102T150405"), id, "audio_raw")
+	filePath := filepath.Join(r.conf.StorageAudioFolder, fileName)
+	if err := utils.AtomicallySaveToFile(filePath, rawWaw); err != nil {
+		return fmt.Errorf("failed to write audio file %s: %w", filePath, err)
+	}
+	return nil
+}
+
 func saveItems[T any](storageFolder, postfix string, items []T) error {
 	chunks := utils.ChunkSlice(items, 500)
 	for i := range chunks {
