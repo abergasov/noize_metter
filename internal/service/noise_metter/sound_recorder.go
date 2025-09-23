@@ -9,7 +9,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func (s *Service) RecordSound() error {
+type RecordTask struct {
+	StartTime time.Time
+	Duration  time.Duration
+}
+
+func (s *Service) RecordSound(task *RecordTask) error {
 	url := fmt.Sprintf("ws://%s/api/stream2/", s.conf.RemoteHost)
 	conn, _, err := websocket.DefaultDialer.DialContext(s.ctx, url, nil)
 	if err != nil {
@@ -26,8 +31,7 @@ func (s *Service) RecordSound() error {
 		return fmt.Errorf("send session ID failed: %w", err)
 	}
 	// identification
-	now := (time.Now().Unix() - 60) * 1000
-	q := fmt.Sprintf("Audio %d, 60\n", now)
+	q := fmt.Sprintf("Audio %d, %d\n", task.StartTime.UnixMilli(), int64(task.Duration))
 	if err = conn.WriteMessage(websocket.TextMessage, []byte(q)); err != nil {
 		return fmt.Errorf("send session ID failed: %w", err)
 	}
