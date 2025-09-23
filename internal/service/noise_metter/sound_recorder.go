@@ -20,10 +20,22 @@ func (s *Service) bgFetchRecordTasks() {
 		case <-s.ctx.Done():
 			return
 		case task := <-s.recordTasks:
-			if err := s.RecordSound(task); err != nil {
-				s.log.Error("record sound error: ", err)
-			}
+			s.RecordSoundWrapper(task)
 		}
+	}
+}
+
+func (s *Service) RecordSoundWrapper(task *RecordTask) {
+	// wait till now will be after task.StartTime+task.Duration + 4 seconds just in case
+	endTime := task.StartTime.Add(task.Duration).Add(4 * time.Second)
+	for {
+		if time.Now().After(endTime) {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	if err := s.RecordSound(task); err != nil {
+		s.log.Error("failed to record sound: ", err)
 	}
 }
 
