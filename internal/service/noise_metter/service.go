@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	thresholdForDump = 90
+	thresholdForDump = 95
 )
 
 type Service struct {
