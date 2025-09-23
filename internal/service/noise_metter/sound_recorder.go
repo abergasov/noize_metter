@@ -2,6 +2,7 @@ package noise_metter
 
 import (
 	"encoding/base64"
+	"encoding/binary"
 	"fmt"
 	"strings"
 	"time"
@@ -69,6 +70,8 @@ func (s *Service) RecordSound(task *RecordTask) error {
 	}
 
 	result := make([]byte, 0, 1_000_000)
+	result = append(result, intToBytes(uint64(task.StartTime.Unix()))...)
+	result = append(result, intToBytes(uint64(task.Duration.Seconds()))...)
 	for {
 		_, msg, err = conn.ReadMessage()
 		if err != nil {
@@ -95,4 +98,10 @@ func (s *Service) RecordSound(task *RecordTask) error {
 		return fmt.Errorf("write file error: %w", err)
 	}
 	return nil
+}
+
+func intToBytes(n uint64) []byte {
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, n)
+	return b
 }
