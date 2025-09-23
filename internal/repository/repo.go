@@ -20,6 +20,9 @@ func InitRepo(ctx context.Context, log logger.AppLogger, conf *config.AppConfig)
 	if err := os.MkdirAll(conf.StorageSubstationFolder, 0o755); err != nil {
 		log.Fatal("error creating substation storage folder", err)
 	}
+	if err := os.MkdirAll(conf.StorageAudioFolder, 0o755); err != nil {
+		log.Fatal("error creating audio storage folder", err)
+	}
 	return &Repo{
 		ctx:  ctx,
 		conf: conf,
