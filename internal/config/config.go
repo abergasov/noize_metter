@@ -15,6 +15,7 @@ type AppConfig struct {
 	RemoteHost              string   `yaml:"remote_host"`
 	RemotePass              string   `yaml:"remote_pass"`
 	StorageNoiseFolder      string   `yaml:"storage_noise_folder"`
+	StorageAudioFolder      string   `yaml:"storage_audio_folder"`
 	StorageSubstationFolder string   `yaml:"storage_substation_folder"`
 	DataHost                string   `yaml:"data_host"`
 	APIKey                  string   `yaml:"api_key"`
