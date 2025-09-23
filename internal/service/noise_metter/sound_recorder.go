@@ -14,6 +14,19 @@ type RecordTask struct {
 	Duration  time.Duration
 }
 
+func (s *Service) bgFetchRecordTasks() {
+	for {
+		select {
+		case <-s.ctx.Done():
+			return
+		case task := <-s.recordTasks:
+			if err := s.RecordSound(task); err != nil {
+				s.log.Error("record sound error: ", err)
+			}
+		}
+	}
+}
+
 func (s *Service) RecordSound(task *RecordTask) error {
 	url := fmt.Sprintf("ws://%s/api/stream2/", s.conf.RemoteHost)
 	conn, _, err := websocket.DefaultDialer.DialContext(s.ctx, url, nil)

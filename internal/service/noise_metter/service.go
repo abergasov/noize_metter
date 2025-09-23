@@ -29,19 +29,23 @@ type Service struct {
 	session atomic.Value
 	cookie  atomic.Value
 	items   *utils.RWSlice[entities.NoiseMeasures]
+
+	recordTasks chan *RecordTask
 }
 
 func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfig, repo *repository.Repo) *Service {
 	srv := &Service{
-		ctx:     ctx,
-		log:     log.With(logger.WithService("noise_metter")),
-		conf:    conf,
-		repo:    repo,
-		session: atomic.Value{},
-		cookie:  atomic.Value{},
-		items:   utils.NewRWSlice[entities.NoiseMeasures](),
+		ctx:         ctx,
+		log:         log.With(logger.WithService("noise_metter")),
+		conf:        conf,
+		repo:        repo,
+		session:     atomic.Value{},
+		cookie:      atomic.Value{},
+		items:       utils.NewRWSlice[entities.NoiseMeasures](),
+		recordTasks: make(chan *RecordTask, 100),
 	}
 	go srv.bgDumpData()
+	go srv.bgFetchRecordTasks()
 	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/noiser/upload_data", conf.DataHost)
 	go service.BGUploadData[entities.NoiseMeasures](ctx, log, conf, hostURL, conf.StorageNoiseFolder)
 	go service.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageNoiseFolder)
