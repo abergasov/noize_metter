@@ -14,6 +14,13 @@ type RecordTask struct {
 	Duration  time.Duration
 }
 
+func (s *Service) addRecordTask(startTime time.Time, duration time.Duration) {
+	s.recordTasks <- &RecordTask{
+		StartTime: startTime,
+		Duration:  duration,
+	}
+}
+
 func (s *Service) bgFetchRecordTasks() {
 	for {
 		select {
