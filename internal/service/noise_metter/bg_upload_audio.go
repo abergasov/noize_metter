@@ -78,5 +78,8 @@ func (s *Service) uploadAudio(filePath, fileName string) error {
 	if code == http.StatusOK {
 		return nil
 	}
-	return err
+	if err != nil {
+		err = fmt.Errorf("error uploading audio file, code %d: %w", code, err)
+	}
+	return nil
 }
