@@ -9,6 +9,7 @@ import (
 	"noize_metter/internal/utils"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -37,6 +38,9 @@ func (s *Service) uploadAudioWrapper() error {
 	if err != nil {
 		return fmt.Errorf("error reading audio storage folder: %w", err)
 	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Name() < entries[j].Name()
+	})
 	for _, e := range entries {
 		if e.IsDir() {
 			continue
