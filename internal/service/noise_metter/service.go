@@ -53,6 +53,7 @@ func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfi
 	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/noiser/upload_data", conf.DataHost)
 	go service.BGUploadData[entities.NoiseMeasures](ctx, log, conf, hostURL, conf.StorageNoiseFolder)
 	go service.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageNoiseFolder)
+	go service.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageAudioFolder)
 	return srv
 }
 
