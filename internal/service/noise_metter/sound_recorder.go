@@ -22,6 +22,7 @@ var (
 )
 
 func (s *Service) addRecordTask(startTime time.Time, duration time.Duration, triggeredBy float64) {
+	return
 	s.recordTasks <- &RecordTask{
 		StartTime:   startTime,
 		Duration:    duration,
