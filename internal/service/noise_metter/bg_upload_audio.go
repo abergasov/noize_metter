@@ -59,7 +59,7 @@ func (s *Service) uploadAudioWrapper() error {
 }
 
 func (s *Service) uploadAudio(filePath, fileName string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	ctx, cancel := context.WithTimeout(s.ctx, 1*time.Minute)
 	defer cancel()
 
 	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/noiser/upload_wav", s.conf.DataHost)
