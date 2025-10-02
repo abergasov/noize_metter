@@ -65,7 +65,12 @@ func (s *Service) Run() {
 		s.log.Fatal("auth err: ", err)
 	}
 	go s.bgSetSession()
-	// Placeholder for actual service logic
+	go s.processLiveData()
+	go s.processWeatherSensor()
+	go s.uploadWeatherData()
+}
+
+func (s *Service) processLiveData() {
 	for {
 		select {
 		case <-s.ctx.Done():

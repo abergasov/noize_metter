@@ -3,6 +3,7 @@ package noise_metter
 import (
 	"bytes"
 	"compress/zlib"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -11,15 +12,63 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"noize_metter/internal/entities"
+	"noize_metter/internal/utils"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 var (
-	reg = regexp.MustCompile("[^a-zA-Z0-9.-]+")
+	processedTime = make(map[string]struct{}, 365*24*12)
+	reg           = regexp.MustCompile("[^a-zA-Z0-9.-]+")
+	receivedItems = make(chan *entities.NoiseWeather, 1_000)
 )
+
+func (s *Service) uploadWeatherData() {
+	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/noiser/upload_weather_sensor", s.conf.DataHost)
+	for data := range receivedItems {
+		now := time.Now().Format("2006-01-02 15:04")
+		if _, exists := processedTime[now]; exists {
+			continue
+		}
+		if err := s.uploadInfo(hostURL, data); err != nil {
+			continue
+		}
+		processedTime[now] = struct{}{}
+	}
+}
+
+func (s *Service) uploadInfo(hostURL string, data *entities.NoiseWeather) error {
+	ctx, cancel := context.WithTimeout(s.ctx, 15*time.Second)
+	defer cancel()
+
+	_, code, err := utils.PostCurl[any](ctx, hostURL, data, map[string]string{
+		"Content-Type": "application/json",
+		"auth-mapi":    s.conf.APIKey,
+	})
+	if code == http.StatusOK {
+		s.log.Info("weather data uploaded successfully")
+		return nil
+	}
+	return fmt.Errorf("weather data uploaded failed, code: %d, err: %w", code, err)
+}
+
+func (s *Service) processWeatherSensor() {
+	for {
+		select {
+		case <-s.ctx.Done():
+			s.log.Info("Noise Metter service weather sensor scrapper stopped.")
+			return
+		default:
+			if err := s.ScrapeWeatherSensorData(); err != nil {
+				s.log.Error("failed to connect for weather session", err)
+				time.Sleep(5 * time.Second)
+			}
+		}
+	}
+}
 
 func (s *Service) ScrapeWeatherSensorData() error {
 	sessionID, _ := s.session.Load().(string)
@@ -75,7 +124,7 @@ func (s *Service) ScrapeWeatherSensorData() error {
 			if errP != nil {
 				continue
 			}
-			println(res.String())
+			receivedItems <- res
 		}
 	}
 }
