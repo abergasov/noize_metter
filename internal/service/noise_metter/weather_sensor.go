@@ -29,7 +29,7 @@ var (
 func (s *Service) uploadWeatherData() {
 	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/noiser/upload_weather_sensor", s.conf.DataHost)
 	for data := range receivedItems {
-		now := time.Now().Format("2006-01-02 15:04")
+		now := utils.RoundToNearest5Minutes(time.Now()).Format(time.DateTime)
 		if _, exists := processedTime[now]; exists {
 			continue
 		}
