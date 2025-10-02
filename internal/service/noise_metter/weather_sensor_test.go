@@ -8,8 +8,32 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestScrapeWeatherSensorData(t *testing.T) {
+	container := testhelpers.GetClean(t)
+	require.NoError(t, container.ServiceNoise.Auth())
+	require.NoError(t, container.ServiceNoise.ScrapeWeatherSensorData())
+}
+
 func TestParseWeatherSensorData(t *testing.T) {
 	cases := map[string]entities.NoiseWeather{
+		"B6VlAHicY2BgYGAE4otMEBqEuRggICwxszgxJ5GB3gDkhggjS1MzQ0tjetsNDAaG0GAnelsLBsxAbKRnSnd7ZYCYBWS3qRHd7ZYDYlYgNjTWM6C33dxAzAbExpZ6FvS2mx2KDQ0MLPToHOzyQMwBxAb0D3IGBSDmHCC7lehu4+ABAHTIDDg=": {
+			WindSpeedAvg:   "2.5",
+			WindDirection:  "252",
+			AirTemperature: "13.0",
+			RelHumidity:    "39.8",
+			AirPressure:    "1008.2",
+			RainIntensity:  "0.0",
+			HailIntensity:  "0.0",
+		},
+		"B6U/AHicY2BgYGAE4otMEBqEuRggICwxszgxJ5GB3gDkhggjS1MzQ0tjetsNDAaG0GAnelsLBsxAbKBnSnd7ZYCYBYiNTAzpbrccELMCsa6BngW97eYGYjYgNjQw0DOgs93sUAy021LPkr52ywMxBwMordHb1wwMCkDMOUB2K9HdxsEDAM3/DFo=": {
+			WindSpeedAvg:   "0.5",
+			WindDirection:  "241",
+			AirTemperature: "-0.8",
+			RelHumidity:    "100.0",
+			AirPressure:    "1009.9",
+			RainIntensity:  "0.0",
+			HailIntensity:  "0.0",
+		},
 		"B6VSAHicY2BgYGAE4otMEBqEuRggICwxszgxJ5GB3gDkhggjS1MzQ0tjetsNDAaG0GAnelsLBsxAbKRnQnd7ZYCYBYiNjczobrccELMCsaWeAd3t5gZiNiA2N9Kju8fZodjQwMBYz5C": {
 			WindSpeedAvg:   "2.4",
 			WindDirection:  "326",

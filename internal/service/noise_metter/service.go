@@ -86,7 +86,7 @@ func (s *Service) Stop() {
 }
 
 func (s *Service) connectForSession() error {
-	sessionID := s.session.Load().(string)
+	sessionID, _ := s.session.Load().(string)
 	if sessionID == "" {
 		return fmt.Errorf("session is empty")
 	}
