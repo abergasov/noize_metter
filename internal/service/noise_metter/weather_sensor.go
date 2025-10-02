@@ -63,13 +63,14 @@ func (s *Service) ScrapeWeatherSensorData() error {
 			return fmt.Errorf("read: %w", errR)
 		}
 
-		strMsg := string(msg)
-		start := strMsg[:5]
-		answer := start + "A=="
-		if err = conn.WriteMessage(websocket.TextMessage, []byte(answer)); err != nil {
+		result := make([]byte, 0, 5+3)
+		result = append(result, msg[:5]...)
+		result = append(result, 'A', '=', '=')
+		if err = conn.WriteMessage(websocket.TextMessage, result); err != nil {
 			return fmt.Errorf("send command failed: %w", err)
 		}
 		if len(msg) > 40 {
+			strMsg := string(msg)
 			res, errP := s.ParseWeatherSensorData(strMsg)
 			if errP != nil {
 				continue
@@ -77,7 +78,6 @@ func (s *Service) ScrapeWeatherSensorData() error {
 			println(res.String())
 		}
 	}
-	return nil
 }
 
 func (s *Service) ParseWeatherSensorData(base64Data string) (*entities.NoiseWeather, error) {
