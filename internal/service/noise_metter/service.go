@@ -65,7 +65,12 @@ func (s *Service) Run() {
 		s.log.Fatal("auth err: ", err)
 	}
 	go s.bgSetSession()
-	// Placeholder for actual service logic
+	go s.processLiveData()
+	go s.processWeatherSensor()
+	go s.uploadWeatherData()
+}
+
+func (s *Service) processLiveData() {
 	for {
 		select {
 		case <-s.ctx.Done():
@@ -86,7 +91,7 @@ func (s *Service) Stop() {
 }
 
 func (s *Service) connectForSession() error {
-	sessionID := s.session.Load().(string)
+	sessionID, _ := s.session.Load().(string)
 	if sessionID == "" {
 		return fmt.Errorf("session is empty")
 	}
