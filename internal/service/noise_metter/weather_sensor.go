@@ -64,6 +64,7 @@ func (s *Service) processWeatherSensor() {
 			s.log.Info("Noise Metter service weather sensor scrapper stopped.")
 			return
 		default:
+			s.log.Info("Noise Metter service weather sensor scrapper started")
 			if err := s.ScrapeWeatherSensorData(); err != nil {
 				s.log.Error("failed to connect for weather session", err)
 				time.Sleep(5 * time.Second)
