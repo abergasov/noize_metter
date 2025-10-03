@@ -118,7 +118,7 @@ func (s *Service) ScrapeWeatherSensorData() error {
 		}
 
 		counter++
-		if counter%100 == 0 {
+		if counter%300 == 0 {
 			s.log.Info("weather sensor data received", logger.WithUnt64("messages", uint64(counter)))
 		}
 		result := make([]byte, 0, 5+3)
