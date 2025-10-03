@@ -12,6 +12,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"noize_metter/internal/entities"
+	"noize_metter/internal/logger"
 	"noize_metter/internal/utils"
 	"regexp"
 	"strings"
@@ -109,12 +110,17 @@ func (s *Service) ScrapeWeatherSensorData() error {
 		return fmt.Errorf("send session ID failed: %w", err)
 	}
 
+	counter := 0
 	for {
 		_, msg, errR := conn.ReadMessage()
 		if errR != nil {
 			return fmt.Errorf("read: %w", errR)
 		}
 
+		counter++
+		if counter%100 == 0 {
+			s.log.Info("weather sensor data received", logger.WithUnt64("messages", uint64(counter)))
+		}
 		result := make([]byte, 0, 5+3)
 		result = append(result, msg[:5]...)
 		result = append(result, 'A', '=', '=')
