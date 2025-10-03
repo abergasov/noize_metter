@@ -29,14 +29,16 @@ var (
 func (s *Service) uploadWeatherData() {
 	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/noiser/upload_weather_sensor", s.conf.DataHost)
 	for data := range receivedItems {
-		now := utils.RoundToNearest5Minutes(time.Now()).Format(time.DateTime)
-		if _, exists := processedTime[now]; exists {
+		now := utils.RoundToNearest5Minutes(time.Now())
+		if _, exists := processedTime[now.Format(time.DateTime)]; exists {
 			continue
 		}
+		data.Timestamp = now
+		data.TimestampNum = utils.TimeToDayIntNum(now)
 		if err := s.uploadInfo(hostURL, data); err != nil {
 			continue
 		}
-		processedTime[now] = struct{}{}
+		processedTime[now.Format(time.DateTime)] = struct{}{}
 	}
 }
 

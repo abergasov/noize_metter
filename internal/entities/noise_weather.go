@@ -1,15 +1,20 @@
 package entities
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type NoiseWeather struct {
-	WindSpeedAvg   string `json:"wind_speed_avg"`
-	WindDirection  string `json:"wind_direction"`
-	AirTemperature string `json:"air_temperature"`
-	RelHumidity    string `json:"rel_humidity"`
-	AirPressure    string `json:"air_pressure"`
-	RainIntensity  string `json:"rain_intensity"`
-	HailIntensity  string `json:"hail_intensity"`
+	Timestamp      time.Time `json:"timestamp"`
+	TimestampNum   int64     `json:"timestamp_num"`
+	WindSpeedAvg   string    `json:"wind_speed_avg"`
+	WindDirection  string    `json:"wind_direction"`
+	AirTemperature string    `json:"air_temperature"`
+	RelHumidity    string    `json:"rel_humidity"`
+	AirPressure    string    `json:"air_pressure"`
+	RainIntensity  string    `json:"rain_intensity"`
+	HailIntensity  string    `json:"hail_intensity"`
 }
 
 func (n *NoiseWeather) String() string {
