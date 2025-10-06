@@ -72,7 +72,7 @@ self_deploy: ## Deploy self from application
 	make build
 
 logs: ## Show logs of service
-	sudo journalctl -u noizemetter.service -f | awk -F']: ' '{print $$2}'
+	sudo journalctl -u noizemetter.service -f -o cat
 
 install_service: patch_sudoers ## Install service
 	git config --global --add safe.directory $(CURDIR)
