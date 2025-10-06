@@ -65,7 +65,7 @@ func (s *Service) processWeatherSensor() {
 			s.log.Info("Noise Metter service weather sensor scrapper stopped.")
 			return
 		default:
-			s.log.Info("Noise Metter service weather sensor scrapper started")
+			s.log.Info("weather sensor scrapper started")
 			if err := s.ScrapeWeatherSensorData(); err != nil {
 				s.log.Error("failed to connect for weather session", err)
 				time.Sleep(5 * time.Second)
@@ -83,6 +83,7 @@ func (s *Service) ScrapeWeatherSensorData() error {
 	if err != nil {
 		return fmt.Errorf("invalid server URL: %w", err)
 	}
+	defer s.log.Info("weather sensor connection closed")
 	header := http.Header{}
 	header.Set("Origin", s.conf.RemoteHost)
 
