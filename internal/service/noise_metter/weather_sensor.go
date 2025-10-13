@@ -27,7 +27,7 @@ var (
 	receivedItems = make(chan *entities.NoiseWeather, 1_000)
 )
 
-func (s *Service) uploadWeatherData() {
+func (s *Service) uploadWeatherData(log logger.AppLogger) {
 	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/noiser/upload_weather_sensor", s.conf.DataHost)
 	for data := range receivedItems {
 		now := utils.RoundToNearest5Minutes(time.Now())
@@ -36,14 +36,14 @@ func (s *Service) uploadWeatherData() {
 		}
 		data.Timestamp = now
 		data.TimestampNum = utils.TimeToDayIntNum(now)
-		if err := s.uploadInfo(hostURL, data); err != nil {
+		if err := s.uploadInfo(hostURL, data, log); err != nil {
 			continue
 		}
 		processedTime[now.Format(time.DateTime)] = struct{}{}
 	}
 }
 
-func (s *Service) uploadInfo(hostURL string, data *entities.NoiseWeather) error {
+func (s *Service) uploadInfo(hostURL string, data *entities.NoiseWeather, log logger.AppLogger) error {
 	ctx, cancel := context.WithTimeout(s.ctx, 15*time.Second)
 	defer cancel()
 
@@ -52,29 +52,30 @@ func (s *Service) uploadInfo(hostURL string, data *entities.NoiseWeather) error 
 		"auth-mapi":    s.conf.APIKey,
 	})
 	if code == http.StatusOK {
-		s.log.Info("weather data uploaded successfully")
+		log.Info("weather data uploaded successfully")
 		return nil
 	}
 	return fmt.Errorf("weather data uploaded failed, code: %d, err: %w", code, err)
 }
 
-func (s *Service) processWeatherSensor() {
+func (s *Service) processWeatherSensor(log logger.AppLogger) {
 	for {
 		select {
 		case <-s.ctx.Done():
-			s.log.Info("Noise Metter service weather sensor scrapper stopped.")
+			log.Info("Noise Metter service weather sensor scrapper stopped.")
 			return
 		default:
-			s.log.Info("weather sensor scrapper started")
-			if err := s.ScrapeWeatherSensorData(); err != nil {
-				s.log.Error("failed to connect for weather session", err)
+			log.Info("weather sensor scrapper started")
+			if err := s.ScrapeWeatherSensorData(log); err != nil {
+				log.Error("failed to connect for weather session", err)
 				time.Sleep(5 * time.Second)
 			}
+			log.Info("weather sensor scrapper stopped, retrying...")
 		}
 	}
 }
 
-func (s *Service) ScrapeWeatherSensorData() error {
+func (s *Service) ScrapeWeatherSensorData(log logger.AppLogger) error {
 	sessionID, _ := s.session.Load().(string)
 	if sessionID == "" {
 		return fmt.Errorf("session is empty")
@@ -83,7 +84,7 @@ func (s *Service) ScrapeWeatherSensorData() error {
 	if err != nil {
 		return fmt.Errorf("invalid server URL: %w", err)
 	}
-	defer s.log.Info("weather sensor connection closed")
+	defer log.Info("weather sensor connection closed")
 	header := http.Header{}
 	header.Set("Origin", s.conf.RemoteHost)
 
@@ -120,7 +121,7 @@ func (s *Service) ScrapeWeatherSensorData() error {
 
 		counter++
 		if counter%300 == 0 {
-			s.log.Info("weather sensor data received", logger.WithUnt64("messages", uint64(counter)))
+			log.Info("weather sensor data received", logger.WithUnt64("messages", uint64(counter)))
 		}
 		result := make([]byte, 0, 5+3)
 		result = append(result, msg[:5]...)

@@ -40,7 +40,7 @@ type Service struct {
 func NewService(ctx context.Context, log logger.AppLogger, conf *config.AppConfig, repo *repository.Repo) *Service {
 	srv := &Service{
 		ctx:         ctx,
-		log:         log.With(logger.WithService("noise_metter")),
+		log:         log,
 		conf:        conf,
 		repo:        repo,
 		session:     atomic.Value{},
@@ -65,20 +65,20 @@ func (s *Service) Run() {
 		s.log.Fatal("auth err: ", err)
 	}
 	go s.bgSetSession()
-	go s.processLiveData()
-	go s.processWeatherSensor()
-	go s.uploadWeatherData()
+	go s.processLiveData(s.log.With(logger.WithService("noise_metter")))
+	go s.processWeatherSensor(s.log.With(logger.WithService("weather_sensor")))
+	go s.uploadWeatherData(s.log.With(logger.WithService("weather_sensor")))
 }
 
-func (s *Service) processLiveData() {
+func (s *Service) processLiveData(log logger.AppLogger) {
 	for {
 		select {
 		case <-s.ctx.Done():
-			s.log.Info("Noise Metter service stopped.")
+			log.Info("Noise Metter service stopped.")
 			return
 		default:
 			if err := s.connectForSession(); err != nil {
-				s.log.Error("failed to connect for session", err)
+				log.Error("failed to connect for session", err)
 				time.Sleep(5 * time.Second)
 			}
 		}
@@ -86,7 +86,7 @@ func (s *Service) processLiveData() {
 }
 
 func (s *Service) Stop() {
-	s.log.Info("stopping service")
+	s.log.Info("stopping service noiser")
 	s.dumpData()
 }
 
