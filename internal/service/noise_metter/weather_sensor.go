@@ -16,6 +16,7 @@ import (
 	"noize_metter/internal/utils"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -25,6 +26,7 @@ var (
 	processedTime = make(map[string]struct{}, 365*24*12)
 	reg           = regexp.MustCompile("[^a-zA-Z0-9.-]+")
 	receivedItems = make(chan *entities.NoiseWeather, 1_000)
+	lastReceived  atomic.Value
 )
 
 func (s *Service) uploadWeatherData(log logger.AppLogger) {
@@ -76,6 +78,28 @@ func (s *Service) processWeatherSensor(log logger.AppLogger) {
 }
 
 func (s *Service) ScrapeWeatherSensorData(log logger.AppLogger) error {
+	lastReceived.Store(time.Now())
+	ctx, cancel := context.WithCancel(s.ctx)
+	defer cancel()
+
+	go func() {
+		ticker := time.NewTicker(25 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				lastTime, _ := lastReceived.Load().(time.Time)
+				if time.Since(lastTime) > 2*time.Minute {
+					log.Info("no data received from weather sensor for 2 minutes, reconnecting...")
+					cancel()
+					return
+				}
+			}
+		}
+	}()
+
 	sessionID, _ := s.session.Load().(string)
 	if sessionID == "" {
 		return fmt.Errorf("session is empty")
@@ -97,7 +121,7 @@ func (s *Service) ScrapeWeatherSensorData(log logger.AppLogger) error {
 		cookieHeader += c.Name + "=" + c.Value
 	}
 	header.Set("Cookie", cookieHeader)
-	conn, _, err := websocket.DefaultDialer.DialContext(s.ctx, u.String(), header)
+	conn, _, err := websocket.DefaultDialer.DialContext(ctx, u.String(), header)
 	if err != nil {
 		return fmt.Errorf("dial: %w", err)
 	}
@@ -114,28 +138,34 @@ func (s *Service) ScrapeWeatherSensorData(log logger.AppLogger) error {
 
 	counter := 0
 	for {
-		_, msg, errR := conn.ReadMessage()
-		if errR != nil {
-			return fmt.Errorf("read: %w", errR)
-		}
-
-		counter++
-		if counter%300 == 0 {
-			log.Info("weather sensor data received", logger.WithUnt64("messages", uint64(counter)))
-		}
-		result := make([]byte, 0, 5+3)
-		result = append(result, msg[:5]...)
-		result = append(result, 'A', '=', '=')
-		if err = conn.WriteMessage(websocket.TextMessage, result); err != nil {
-			return fmt.Errorf("send command failed: %w", err)
-		}
-		if len(msg) > 40 {
-			strMsg := string(msg)
-			res, errP := s.ParseWeatherSensorData(strMsg)
-			if errP != nil {
-				continue
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			_, msg, errR := conn.ReadMessage()
+			if errR != nil {
+				return fmt.Errorf("read: %w", errR)
 			}
-			receivedItems <- res
+
+			counter++
+			if counter%300 == 0 {
+				log.Info("weather sensor data received", logger.WithUnt64("messages", uint64(counter)))
+			}
+			result := make([]byte, 0, 5+3)
+			result = append(result, msg[:5]...)
+			result = append(result, 'A', '=', '=')
+			if err = conn.WriteMessage(websocket.TextMessage, result); err != nil {
+				return fmt.Errorf("send command failed: %w", err)
+			}
+			if len(msg) > 40 {
+				strMsg := string(msg)
+				res, errP := s.ParseWeatherSensorData(strMsg)
+				if errP != nil {
+					continue
+				}
+				lastReceived.Store(time.Now())
+				receivedItems <- res
+			}
 		}
 	}
 }
