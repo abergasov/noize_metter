@@ -123,7 +123,7 @@ func (s *Service) ScrapeWeatherSensorData(log logger.AppLogger) error {
 	header.Set("Cookie", cookieHeader)
 	conn, _, err := websocket.DefaultDialer.DialContext(ctx, u.String(), header)
 	if err != nil {
-		return fmt.Errorf("dial: %w", err)
+		return fmt.Errorf("dial error: %w", err)
 	}
 	defer conn.Close()
 
@@ -131,15 +131,15 @@ func (s *Service) ScrapeWeatherSensorData(log logger.AppLogger) error {
 	if err = conn.SetReadDeadline(time.Now().Add(readTimeout)); err != nil {
 		return fmt.Errorf("set read deadline failed: %w", err)
 	}
-	conn.SetPongHandler(func(string) error {
-		lastReceived.Store(time.Now())
-		return conn.SetReadDeadline(time.Now().Add(readTimeout))
-	})
-	conn.SetCloseHandler(func(code int, text string) error {
-		// allow the read loop to exit cleanly
-		_ = conn.SetReadDeadline(time.Now().Add(1 * time.Nanosecond))
-		return nil
-	})
+	//conn.SetPongHandler(func(string) error {
+	//	lastReceived.Store(time.Now())
+	//	return conn.SetReadDeadline(time.Now().Add(readTimeout))
+	//})
+	//conn.SetCloseHandler(func(code int, text string) error {
+	//	// allow the read loop to exit cleanly
+	//	_ = conn.SetReadDeadline(time.Now().Add(1 * time.Nanosecond))
+	//	return nil
+	//})
 
 	authMessage := make([]byte, 0, 54)
 	authMessage = append(authMessage, 0, 150, 0, 0)
