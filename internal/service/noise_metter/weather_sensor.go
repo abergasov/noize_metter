@@ -82,24 +82,6 @@ func (s *Service) ScrapeWeatherSensorData(log logger.AppLogger) error {
 	ctx, cancel := context.WithCancel(s.ctx)
 	defer cancel()
 
-	go func() {
-		ticker := time.NewTicker(25 * time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				lastTime, _ := lastReceived.Load().(time.Time)
-				if time.Since(lastTime) > 2*time.Minute {
-					log.Info("no data received from weather sensor for 2 minutes, reconnecting...")
-					cancel()
-					return
-				}
-			}
-		}
-	}()
-
 	sessionID, _ := s.session.Load().(string)
 	if sessionID == "" {
 		return fmt.Errorf("session is empty")
@@ -127,10 +109,10 @@ func (s *Service) ScrapeWeatherSensorData(log logger.AppLogger) error {
 	}
 	defer conn.Close()
 
-	const readTimeout = 75 * time.Second
-	if err = conn.SetReadDeadline(time.Now().Add(readTimeout)); err != nil {
-		return fmt.Errorf("set read deadline failed: %w", err)
-	}
+	//const readTimeout = 75 * time.Second
+	//if err = conn.SetReadDeadline(time.Now().Add(readTimeout)); err != nil {
+	//	return fmt.Errorf("set read deadline failed: %w", err)
+	//}
 	//conn.SetPongHandler(func(string) error {
 	//	lastReceived.Store(time.Now())
 	//	return conn.SetReadDeadline(time.Now().Add(readTimeout))
@@ -149,6 +131,25 @@ func (s *Service) ScrapeWeatherSensorData(log logger.AppLogger) error {
 	if err = conn.WriteMessage(websocket.TextMessage, []byte(base64.StdEncoding.EncodeToString(authMessage))); err != nil {
 		return fmt.Errorf("send session ID failed: %w", err)
 	}
+
+	go func() {
+		ticker := time.NewTicker(25 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				lastTime, _ := lastReceived.Load().(time.Time)
+				if time.Since(lastTime) > 2*time.Minute {
+					log.Info("no data received from weather sensor for 2 minutes, reconnecting...")
+					_ = conn.Close()
+					cancel()
+					return
+				}
+			}
+		}
+	}()
 
 	counter := 0
 	for {
