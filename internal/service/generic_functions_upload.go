@@ -10,6 +10,7 @@ import (
 	"noize_metter/internal/config"
 	"noize_metter/internal/logger"
 	"noize_metter/internal/utils"
+	"noize_metter/internal/utils/requests"
 	"os"
 	"path/filepath"
 	"strings"
@@ -94,7 +95,7 @@ func uploadChunk[T HasTimestamp](l logger.AppLogger, hostURL, apiKey, boxIP, fil
 		return nil
 	}
 
-	_, code, err := utils.PostCurl[any](ctx, hostURL, map[string]any{
+	_, code, err := requests.PostCurl[any](ctx, hostURL, map[string]any{
 		"file_name": fileName,
 		"source":    boxIP,
 		"measures":  filtered,

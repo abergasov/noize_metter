@@ -14,6 +14,7 @@ import (
 	"noize_metter/internal/entities"
 	"noize_metter/internal/logger"
 	"noize_metter/internal/utils"
+	"noize_metter/internal/utils/requests"
 	"regexp"
 	"strings"
 	"sync/atomic"
@@ -49,7 +50,7 @@ func (s *Service) uploadInfo(hostURL string, data *entities.NoiseWeather, log lo
 	ctx, cancel := context.WithTimeout(s.ctx, 15*time.Second)
 	defer cancel()
 
-	_, code, err := utils.PostCurl[any](ctx, hostURL, data, map[string]string{
+	_, code, err := requests.PostCurl[any](ctx, hostURL, data, map[string]string{
 		"Content-Type": "application/json",
 		"auth-mapi":    s.conf.APIKey,
 	})

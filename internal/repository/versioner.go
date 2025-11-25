@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"noize_metter/internal/utils"
+	"noize_metter/internal/utils/requests"
 )
 
 func (r *Repo) FetchLatestVersion(ctx context.Context) (string, error) {
@@ -12,7 +12,7 @@ func (r *Repo) FetchLatestVersion(ctx context.Context) (string, error) {
 		Version string `json:"version"`
 	}
 	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/noiser/version", r.conf.DataHost)
-	res, code, err := utils.GetCurl[v](ctx, hostURL, map[string]string{
+	res, code, err := requests.GetCurl[v](ctx, hostURL, map[string]string{
 		"Content-Type": "application/json",
 		"auth-mapi":    r.conf.APIKey,
 	})

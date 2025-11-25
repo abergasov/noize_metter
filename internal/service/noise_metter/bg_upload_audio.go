@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"noize_metter/internal/logger"
 	"noize_metter/internal/utils"
+	"noize_metter/internal/utils/requests"
 	"os"
 	"path/filepath"
 	"sort"
@@ -71,7 +72,7 @@ func (s *Service) uploadAudio(filePath, fileName string) error {
 	if errL != nil {
 		return fmt.Errorf("error loading audio file: %w", errL)
 	}
-	_, code, err := utils.PostCurl[any](ctx, hostURL, map[string]any{
+	_, code, err := requests.PostCurl[any](ctx, hostURL, map[string]any{
 		"file_name": fileName,
 		"source":    s.conf.BoxIP,
 		"measures":  base64.StdEncoding.EncodeToString(data),
