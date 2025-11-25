@@ -12,11 +12,6 @@ import (
 	"time"
 )
 
-const (
-	ServiceName     = "ces"
-	CollectInterval = 5 * time.Minute // how often to collect foreman stat
-)
-
 var (
 	URLListIMDC1 = []string{
 		"http://10.20.10.101",
