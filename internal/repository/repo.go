@@ -14,14 +14,21 @@ type Repo struct {
 }
 
 func InitRepo(ctx context.Context, log logger.AppLogger, conf *config.AppConfig) *Repo {
-	if err := os.MkdirAll(conf.StorageNoiseFolder, 0o755); err != nil {
-		log.Fatal("error creating noise storage folder", err)
+	storageFolders := map[string]string{
+		"noise storage folder":      conf.StorageNoiseFolder,
+		"substation storage folder": conf.StorageSubstationFolder,
+		"audio storage folder":      conf.StorageAudioFolder,
+
+		// ces folders
+		"ces channels v2": conf.StorageCESChannelsV2Folder,
+		"ces channels":    conf.StorageCESChannelsFolder,
+		"ces tanks":       conf.StorageCESTanksFolder,
+		"ces megaboxes":   conf.StorageCESMegaBoxesFolder,
 	}
-	if err := os.MkdirAll(conf.StorageSubstationFolder, 0o755); err != nil {
-		log.Fatal("error creating substation storage folder", err)
-	}
-	if err := os.MkdirAll(conf.StorageAudioFolder, 0o755); err != nil {
-		log.Fatal("error creating audio storage folder", err)
+	for key, folder := range storageFolders {
+		if err := os.MkdirAll(folder, 0o755); err != nil {
+			log.Fatal("error creating storage "+key+" folder", err)
+		}
 	}
 	return &Repo{
 		ctx:  ctx,

@@ -7,7 +7,6 @@ import (
 	"runtime/debug"
 	"strings"
 	"sync"
-	"time"
 )
 
 type SLogger struct {
@@ -16,10 +15,14 @@ type SLogger struct {
 
 var _ AppLogger = (*SLogger)(nil)
 
-func NewAppSLogger(args ...StringWith) AppLogger {
-	return InitLogger([]io.Writer{
-		os.Stdout,
-	}, args...)
+func replacer(_ []string, a slog.Attr) slog.Attr {
+	switch a.Key {
+	case "msg":
+		return slog.String("message", a.Value.String())
+	case "err":
+		return slog.String("error", a.Value.String())
+	}
+	return a
 }
 
 func getLastCommitHash() string {
@@ -35,27 +38,19 @@ func getLastCommitHash() string {
 	return res
 }
 
-func InitLogger(writers []io.Writer, args ...StringWith) AppLogger {
+// NewAppSLogger creates a new logger instance which able to write to multiple writers.
+// By default, if Config.Writers are empty, it will write to stdout.
+func NewAppSLogger(args ...slog.Attr) *SLogger {
+	writers := []io.Writer{os.Stdout}
 	logs := make([]*slog.Logger, 0, len(writers))
 	for _, w := range writers {
-		handler := slog.NewJSONHandler(w, &slog.HandlerOptions{
-			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-				switch a.Key {
-				case "time":
-					return slog.Int64("timestamp", time.Now().Unix())
-				case "level":
-					return slog.String("_level", strings.ToLower(a.Value.String()))
-				case "gray_log_level":
-					return slog.Int64("level", a.Value.Int64())
-				case "msg":
-					return slog.String("short_message", a.Value.String())
-				}
-				return a
-			},
+		var handler slog.Handler
+		handler = slog.NewJSONHandler(w, &slog.HandlerOptions{
+			ReplaceAttr: replacer,
 		})
 		attrs := make([]any, 0, len(args)+1)
 		for _, arg := range args {
-			attrs = append(attrs, slog.String(arg.Key, arg.Val))
+			attrs = append(attrs, arg)
 		}
 
 		if commitHash := getLastCommitHash(); commitHash != "" {
@@ -68,48 +63,40 @@ func InitLogger(writers []io.Writer, args ...StringWith) AppLogger {
 	return &SLogger{logWriters: logs}
 }
 
-func (l *SLogger) Info(message string, args ...StringWith) {
+func (l *SLogger) Info(message string, args ...slog.Attr) {
 	params := prepareSlogParams(nil, args)
 	l.processWriters(func(lg *slog.Logger) {
 		lg.Info(message, params...)
 	})
 }
 
-func (l *SLogger) Error(message string, err error, args ...StringWith) {
+func (l *SLogger) Error(message string, err error, args ...slog.Attr) {
 	params := prepareSlogParams(err, args)
 	l.processWriters(func(lg *slog.Logger) {
 		lg.Error(message, params...)
 	})
 }
 
-func (l *SLogger) Fatal(message string, err error, args ...StringWith) {
-	params := prepareSlogParams(err, args)
-	l.processWriters(func(lg *slog.Logger) {
-		lg.Error(message, params...)
-	})
+func (l *SLogger) Fatal(message string, err error, args ...slog.Attr) {
+	l.Error(message, err, args...)
 	os.Exit(1)
 }
 
-func (l *SLogger) With(args ...StringWith) AppLogger {
+func (l *SLogger) Warn(message string, args ...slog.Attr) {
+	params := prepareSlogParams(nil, args)
+	l.processWriters(func(lg *slog.Logger) {
+		lg.Warn(message, params...)
+	})
+}
+
+func (l *SLogger) With(args ...slog.Attr) AppLogger {
 	logs := make([]*slog.Logger, 0, len(l.logWriters))
 	for _, lg := range l.logWriters {
 		logs = append(logs, lg.With(prepareSlogParams(nil, args)...))
 	}
-	return &SLogger{
-		logWriters: logs,
-	}
+	return &SLogger{logWriters: logs}
 }
 
-func prepareSlogParams(err error, args []StringWith) []any {
-	params := make([]any, 0, len(args)+2)
-	if err != nil {
-		params = append(params, WithString("error", err.Error()).slog())
-	}
-	for _, arg := range args {
-		params = append(params, arg.slog())
-	}
-	return params
-}
 func (l *SLogger) processWriters(processor func(*slog.Logger)) {
 	var wg sync.WaitGroup
 	wg.Add(len(l.logWriters))
@@ -120,4 +107,19 @@ func (l *SLogger) processWriters(processor func(*slog.Logger)) {
 		}(i)
 	}
 	wg.Wait()
+}
+
+func prepareSlogParams(err error, args []slog.Attr) []any {
+	params := make([]any, 0, len(args)+1)
+	if err != nil {
+		params = append(params, err)
+	}
+	argsMap := make(map[string]slog.Attr, len(args))
+	for _, arg := range args {
+		argsMap[arg.Key] = arg
+	}
+	for _, arg := range argsMap {
+		params = append(params, arg)
+	}
+	return params
 }

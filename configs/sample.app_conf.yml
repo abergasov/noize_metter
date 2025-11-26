@@ -8,3 +8,10 @@ data_host: https://example.com
 api_key: b1233hL
 app_folder: /tmp/app
 cf_modbus_host: tcp://127.0.0.1:502
+
+ces_user: user
+ces_pass: pass
+storage_ces_megaboxes_folder: /tmp/ces_megaboxes
+storage_cestanks_folder: /tmp/ces_tanks
+storage_ces_channels_folder: /tmp/ces_channels
+storage_ces_channels_v2_folder: /tmp/ces_channels_v2

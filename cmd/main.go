@@ -6,6 +6,7 @@ import (
 	"noize_metter/internal/config"
 	"noize_metter/internal/logger"
 	"noize_metter/internal/repository"
+	"noize_metter/internal/service/ces"
 	"noize_metter/internal/service/deployer"
 	"noize_metter/internal/service/noise_metter"
 	"noize_metter/internal/service/notificator"
@@ -40,6 +41,9 @@ func main() {
 	notifier := notificator.NewSlackService(appLog, appConf)
 	srvNoiser := noise_metter.NewService(ctx, appLog, appConf, repo)
 	go srvNoiser.Run()
+
+	srvCesCollector := ces.NewService(ctx, appLog, appConf, repo)
+	go srvCesCollector.Run()
 
 	srvSubstation, err := substation.NewService(ctx, appLog, appConf, repo)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"noize_metter/internal/config"
 	"noize_metter/internal/logger"
 	"noize_metter/internal/utils"
+	"noize_metter/internal/utils/requests"
 	"strings"
 	"sync"
 	"time"
@@ -164,7 +165,7 @@ func (s *SlackService) sendSlackMessage(hookURLs []string, payload any) error {
 		wg.Add(1)
 		go func(hookURL string) {
 			defer wg.Done()
-			_, code, err := utils.PostCurl[any](ctx, hookURL, payload, map[string]string{"Content-Type": "application/json"})
+			_, code, err := requests.PostCurl[any](ctx, hookURL, payload, map[string]string{"Content-Type": "application/json"})
 			if code == http.StatusOK {
 				return
 			}
