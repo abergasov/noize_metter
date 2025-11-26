@@ -59,7 +59,6 @@ func (s *Service) RunIteration() error {
 		for j := 0; j <= 7; j++ {
 			for k := 0; k <= 5; k++ {
 				cesChannelsTablesV2 = append(cesChannelsTablesV2, entities.CesTanksChannelsV2{
-					Timestamp:    dt,
 					TimestampNum: utils.TimeToDayIntNum(dt),
 					TimestampPQ:  dt.Format(time.DateTime),
 					TankID:       tanks[i].TankID,

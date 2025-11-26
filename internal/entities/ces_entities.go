@@ -261,15 +261,14 @@ func ConvertAPITanks(syncDate time.Time, tList []Tank) []CesTank {
 }
 
 type CesTanksChannelsV2 struct {
-	Timestamp    time.Time `json:"-" db:"timestamp"`
-	TimestampPQ  string    `json:"timestamp" parquet:"name=timestamp, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	TimestampNum int64     `json:"timestamp_num" parquet:"name=timestamp_num, type=INT64"`
-	TankID       int64     `json:"tank_id" parquet:"name=tank_id, type=INT64"`
-	MegaboxID    int64     `json:"megabox_id" parquet:"name=megabox_id, type=INT64"`
-	IMDC         int64     `json:"imdc" parquet:"name=imdc, type=INT64"`
-	Section      int64     `json:"section" parquet:"name=section, type=INT64"`
-	Channel      int64     `json:"channel" parquet:"name=channel, type=INT64"`
-	Amperage     float64   `json:"amperage" parquet:"name=amperage, type=DOUBLE"`
+	TimestampPQ  string  `json:"timestamp" parquet:"name=timestamp, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
+	TimestampNum int64   `json:"timestamp_num" parquet:"name=timestamp_num, type=INT64"`
+	TankID       int64   `json:"tank_id" parquet:"name=tank_id, type=INT64"`
+	MegaboxID    int64   `json:"megabox_id" parquet:"name=megabox_id, type=INT64"`
+	IMDC         int64   `json:"imdc" parquet:"name=imdc, type=INT64"`
+	Section      int64   `json:"section" parquet:"name=section, type=INT64"`
+	Channel      int64   `json:"channel" parquet:"name=channel, type=INT64"`
+	Amperage     float64 `json:"amperage" parquet:"name=amperage, type=DOUBLE"`
 }
 
 func (m CesTanksChannelsV2) GetTimestampNum() int64 {
