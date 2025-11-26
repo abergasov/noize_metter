@@ -61,19 +61,19 @@ func NewService(
 		repo:  repoOldDwh,
 	}
 
-	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/ces_tank/upload_data", conf.DataHost)
+	hostURL := fmt.Sprintf("%s/api-mapi/v1/private/ces/upload_tanks", conf.DataHost)
 	go service.BGUploadData[entities.CesTank](ctx, log, conf, hostURL, conf.StorageCESTanksFolder)
 	go service.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageCESTanksFolder)
 
-	hostURL = fmt.Sprintf("%s/api-mapi/v1/private/ces_megaboxes/upload_data", conf.DataHost)
+	hostURL = fmt.Sprintf("%s/api-mapi/v1/private/ces/upload_megaboxes", conf.DataHost)
 	go service.BGUploadData[entities.MegaBox](ctx, log, conf, hostURL, conf.StorageCESMegaBoxesFolder)
 	go service.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageCESMegaBoxesFolder)
 
-	hostURL = fmt.Sprintf("%s/api-mapi/v1/private/ces_channels/upload_data", conf.DataHost)
+	hostURL = fmt.Sprintf("%s/api-mapi/v1/private/ces/upload_channels", conf.DataHost)
 	go service.BGUploadData[entities.CesTanksChannels](ctx, log, conf, hostURL, conf.StorageCESChannelsFolder)
 	go service.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageCESChannelsFolder)
 
-	hostURL = fmt.Sprintf("%s/api-mapi/v1/private/ces_channels_v2/upload_data", conf.DataHost)
+	hostURL = fmt.Sprintf("%s/api-mapi/v1/private/ces/upload_channels_v2", conf.DataHost)
 	go service.BGUploadData[entities.CesTanksChannelsV2](ctx, log, conf, hostURL, conf.StorageCESChannelsV2Folder)
 	go service.BGPruneOldFiles(ctx, srv.log, srv.conf.StorageCESChannelsV2Folder)
 
