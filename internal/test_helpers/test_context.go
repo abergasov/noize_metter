@@ -9,6 +9,7 @@ import (
 	"noize_metter/internal/service/noise_metter"
 	"noize_metter/internal/service/notificator"
 	"noize_metter/internal/service/substation"
+	"noize_metter/internal/service/webvisu"
 	"os"
 	"path"
 	"strings"
@@ -29,6 +30,7 @@ type TestContainer struct {
 	ServiceSubstation       *substation.Service
 	ServiceSlackNotificator *notificator.SlackService
 	ServiceCes              *ces.Service
+	ServiceWebVisu          *webvisu.Service
 }
 
 func GetClean(t *testing.T) *TestContainer {
@@ -46,6 +48,7 @@ func GetClean(t *testing.T) *TestContainer {
 	serviceSubstation, err := substation.NewService(ctx, appLog, conf, repo)
 	require.NoError(t, err)
 	serviceCes := ces.NewService(ctx, appLog, conf, repo)
+	serviceWebVisu := webvisu.NewService(ctx, appLog, conf, repo)
 	return &TestContainer{
 		Ctx:                     ctx,
 		Cfg:                     conf,
@@ -55,6 +58,7 @@ func GetClean(t *testing.T) *TestContainer {
 		ServiceSubstation:       serviceSubstation,
 		ServiceSlackNotificator: notificator.NewSlackService(appLog, conf),
 		ServiceCes:              serviceCes,
+		ServiceWebVisu:          serviceWebVisu,
 	}
 }
 
