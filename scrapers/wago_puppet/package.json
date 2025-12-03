@@ -1,8 +1,7 @@
 {
-	"name": "cookie_extractor",
+    "name": "webvisu-scraper",
 	"version": "1.0.0",
-	"main": "index.js",
-	"repository": "git@github.com:abergasov/cookie_extractor.git",
+	"main": "src/index.js",
 	"author": "Alejandro <abergasov@gmail.com>",
 	"license": "MIT",
 	"type": "module",

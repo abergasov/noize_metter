@@ -12,7 +12,7 @@ global.cpatchaReslove = ""
 	dotenv.config()
 
 	const browser = await puppeteer.launch({
-		headless: false,
+		headless: true,
 		ignoreHTTPSErrors: true,
 		args: ["--ignore-certificate-errors", "--allow-insecure-localhost"],
 	})

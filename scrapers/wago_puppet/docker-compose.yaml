@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webvisu_scraper
+    restart: always
+#    environment:
+#      SCRAP_USER: "${SCRAP_USER}"
+#      SCRAP_PASS: "${SCRAP_PASS}"
+    volumes:
+      - ./data:/app/data
+    # Puppeteer in root container → needs no-sandbox
+    command: ["node", "src/index.js"]
