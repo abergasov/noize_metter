@@ -18,7 +18,24 @@ global.cpatchaReslove = "";
             '--allow-insecure-localhost'
         ]
     });
+
     const page = await browser.newPage();
+    await page.evaluateOnNewDocument(() => {
+        // capture all text drawn on canvas
+        const origFillText = CanvasRenderingContext2D.prototype.fillText;
+        CanvasRenderingContext2D.prototype.fillText = function (text, x, y, maxWidth) {
+            try {
+                window.__canvasTexts = window.__canvasTexts || {};
+                const canvas = this.canvas;
+                if (canvas) {
+                    window.__canvasTexts[canvas.id] = String(text);
+                }
+            } catch (_) {
+                // ignore
+            }
+            return origFillText.call(this, text, x, y, maxWidth);
+        };
+    });
     await page.goto(mainURL, {
         waitUntil: 'networkidle0',
     });
@@ -31,6 +48,29 @@ global.cpatchaReslove = "";
     await inputs[1].type(process.env.SCRAP_PASS);
     await buttons[1].click();
 
-    //await browser.close()
+    // wait for appear element with id cdsRoot
+    await page.waitForSelector('#cdsRoot', {
+        visible: true,
+        timeout: 30000
+    });
+    console.log("authorized")
+
+    const dumpFile = './canvas_dump.log';
+    const loop = async () => {
+        try {
+            const data = await page.evaluate(() => window.__canvasTexts || {});
+            const record = {
+                ts: new Date().toISOString(),
+                data,
+            };
+            fs.appendFileSync(dumpFile, JSON.stringify(record) + '\n');
+            console.log('dumped:', record);
+        } catch (err) {
+            console.error('dump error:', err);
+        } finally {
+            setTimeout(loop, 5000);
+        }
+    };
+    loop();
 })();
 
