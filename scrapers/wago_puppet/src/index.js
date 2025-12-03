@@ -14,7 +14,12 @@ global.cpatchaReslove = ""
 	const browser = await puppeteer.launch({
 		headless: true,
 		ignoreHTTPSErrors: true,
-		args: ["--ignore-certificate-errors", "--allow-insecure-localhost"],
+		args: [
+            "--ignore-certificate-errors",
+            "--allow-insecure-localhost",
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+        ],
 	})
 
 	const page = await browser.newPage()
